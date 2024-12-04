@@ -21,9 +21,10 @@ const TabIcon = ({ icon, color, name, focused }: TabbarProps) => {
   );
 };
 
-const TabLayout = () => {
+const HomePagelayout = () => {
   return (
     <>
+    
       <Tabs>
         <Tabs.Screen
           name="home"
@@ -43,7 +44,7 @@ const TabLayout = () => {
         <Tabs.Screen
           name="profile"
           options={{
-            title: 'Profile',
+            title: '',
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
@@ -60,4 +61,4 @@ const TabLayout = () => {
   );
 };
 
-export default TabLayout;
+export default HomePagelayout;

@@ -1,12 +1,25 @@
-import { Link } from 'expo-router';
 import React from 'react';
-import { View, Text } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import SplashScreen from '@/components/SplashScreen';
+import Home from './(tabs)/home';
+import { Text, View } from 'react-native';
 
-export default function App() {
+const Stack = createNativeStackNavigator();
+
+const App = () => {
   return (
-    <View className="bg-red">
-      <Text className="text-red-500">Hi there, this is tushar</Text>
-      <Link href={"/home"} className='text-white'>Home</Link>
+    // <NavigationContainer>
+      // <Stack.Navigator initialRouteName="Home" screenOptions={{ headerShown: false }}>
+      //   {/* <Stack.Screen name="Splash" component={SplashScreen} /> */}
+      //   <Stack.Screen name="Home" component={Home} />
+      // </Stack.Navigator>
+    // </NavigationContainer>
+    <View>
+      <Text>Test</Text>
     </View>
   );
-}
+};
+
+export default App;
+
