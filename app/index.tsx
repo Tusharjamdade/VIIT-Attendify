@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Button, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
-
+import firebase from "../app/(auth)/firebase";
 export default function AttendanceScreen() {
   const classes = [
     { letter: 'M', subject: 'Mathematics I', time: '09:30 am', color: '#E3F2FD' },
@@ -10,7 +10,15 @@ export default function AttendanceScreen() {
     { letter: 'B', subject: 'Biology', time: '11:45 am', color: '#E0F2F1' },
     { letter: 'G', subject: 'Geography', time: '12:10 am', color: '#F3E5F5' },
   ];
-
+  const logout = async () => {
+    try {
+      await firebase.auth().signOut();
+      Alert.alert('Logged out successfully!');
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    }
+  };
+  
   return (
     <ScrollView style={styles.container}>
       {/* <View style={styles.header}>
@@ -60,6 +68,9 @@ export default function AttendanceScreen() {
       <Link href={"/subject"}>subject</Link>
       <Link href={"/signin"}>Signin</Link>
       <Link href={"/signup"}>Signup</Link>
+     
+      <Button title="Logout" onPress={logout} />
+
     </ScrollView>
   );
 }
@@ -149,3 +160,21 @@ const styles = StyleSheet.create({
   },
 });
 
+
+
+// import { initializeApp } from "firebase/app";
+// // TODO: Add SDKs for Firebase products that you want to use
+// // https://firebase.google.com/docs/web/setup#available-libraries
+
+// // Your web app's Firebase configuration
+// const firebaseConfig = {
+//   apiKey: "AIzaSyAR0kqtOfhnPVWV34bgCeMkNRRpkYo-nak",
+//   authDomain: "attendify-by-tushar.firebaseapp.com",
+//   projectId: "attendify-by-tushar",
+//   storageBucket: "attendify-by-tushar.firebasestorage.app",
+//   messagingSenderId: "880770431995",
+//   appId: "1:880770431995:web:2e338f3945e16bd534695e"
+// };
+
+// // Initialize Firebase
+// const app = initializeApp(firebaseConfig);

@@ -1,63 +1,17 @@
-
-import { View, Text, Image } from 'react-native';
 import React from 'react';
-import { Tabs } from 'expo-router';
-import Icon from 'react-native-vector-icons/FontAwesome';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import Login from './signin';
+import Signup from './signup';
+const Stack = createStackNavigator();
 
-// Type for TabbarProps
-type TabbarProps = {
-  icon: string; // The name of the FontAwesome icon
-  color: string;
-  name: string;
-  focused: boolean;
-};
-
-const TabIcon = ({ icon, color, name, focused }: TabbarProps) => {
+export default function App() {
   return (
-    <View style={{ alignItems: 'center' }}>
-      <Icon name={icon} size={24} color={focused ? color : 'gray'} />
-      <Text style={{ color: focused ? color : 'gray', fontSize: 12 }}>{name}</Text>
-    </View>
+    // <NavigationContainer>
+      <Stack.Navigator >
+        <Stack.Screen name="Login" component={Login} />
+        <Stack.Screen name="Signup" component={Signup} />
+      </Stack.Navigator>
+    // </NavigationContainer>
   );
-};
-
-const TabLayout = () => {
-  return (
-    <>
-      <Tabs>
-        <Tabs.Screen
-          name="signin"
-          options={{
-            title: '',
-            headerShown: false,
-            tabBarIcon: ({ color, focused }) => (
-              <TabIcon
-                icon="home" // FontAwesome icon name for "fa-house"
-                color={color}
-                name="Home"
-                focused={focused}
-              />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="signup"
-          options={{
-            title: '',
-            headerShown: false,
-            tabBarIcon: ({ color, focused }) => (
-              <TabIcon
-             icon='user' 
-             color={color}
-             name='Profile'
-             focused={focused}
-              />
-            ),
-          }}
-        />
-      </Tabs>
-    </>
-  );
-};
-
-export default TabLayout;
+}

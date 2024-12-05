@@ -2,8 +2,9 @@ import React from 'react';
 import { View, Text, Image, ImageBackground, ScrollView, StyleSheet } from 'react-native';
 import Card from '@/components/card';
 import { router } from 'expo-router';
-
+import firebase from '../(auth)/firebase';
 const Home = () => {
+  const currentUser = firebase.auth().currentUser;
   return (
     <ImageBackground
       source={{ uri: '' }}
@@ -18,7 +19,7 @@ const Home = () => {
               style={styles.avatar}
             />
             <View>
-              <Text style={styles.profileName}>Sarah Johnson</Text>
+              <Text style={styles.profileName}>{JSON.stringify(currentUser)}</Text>
               <Text style={styles.profileRole}>Computer Science Student</Text>
             </View>
           </View>
