@@ -1,5 +1,4 @@
-
-import { View, Text, Image } from 'react-native';
+import { View, Text } from 'react-native';
 import React from 'react';
 import { Tabs } from 'expo-router';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -24,8 +23,22 @@ const TabIcon = ({ icon, color, name, focused }: TabbarProps) => {
 const HomePagelayout = () => {
   return (
     <>
-    
       <Tabs>
+      <Tabs.Screen
+          name="subject"
+          options={{
+            title: '',
+            headerShown: false,
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon
+                icon="book" // Use a valid FontAwesome icon name
+                color={color}
+                name="Subs"
+                focused={focused}
+              />
+            ),
+          }}
+        />
         <Tabs.Screen
           name="home"
           options={{
@@ -48,14 +61,15 @@ const HomePagelayout = () => {
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
-             icon='user' 
-             color={color}
-             name='Profile'
-             focused={focused}
+                icon="user"
+                color={color}
+                name="Profile"
+                focused={focused}
               />
             ),
           }}
         />
+       
       </Tabs>
     </>
   );
