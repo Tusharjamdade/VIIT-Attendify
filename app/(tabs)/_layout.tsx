@@ -31,7 +31,7 @@ const HomePagelayout = () => {
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
-                icon="book" // Use a valid FontAwesome icon name
+                icon="book" 
                 color={color}
                 name="Subs"
                 focused={focused}

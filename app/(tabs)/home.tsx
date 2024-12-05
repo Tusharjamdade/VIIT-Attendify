@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Image, ImageBackground, ScrollView, StyleSheet } from 'react-native';
 import Card from '@/components/card';
+import { router } from 'expo-router';
 
 const Home = () => {
   return (
@@ -37,9 +38,15 @@ const Home = () => {
         <View style={styles.dashboardSection}>
           <Text style={styles.dashboardTitle}>My Dashboard</Text>
           <View style={styles.cardContainer}>
-            <Card title="Attendance" icon="user-check" color="bg-blue-500" />
-            <Card title="Today's Schedule" icon="book-open" color="bg-blue-400" />
-            <Card title="Support" icon="help-circle" color="bg-blue-300" />
+            <Card title="Attendance" icon="user-check" color="bg-blue-500" onPress={()=>{
+              router.push({pathname:"/attendance"})
+            }}/>
+            <Card title="Today's Schedule" icon="book-open" color="bg-blue-400" onPress={()=>{
+              router.push({pathname:"/"})
+            }}/>
+            <Card title="Support" icon="help-circle" color="bg-blue-300" onPress={()=>{
+              router.push({pathname:"/support"})
+            }}/>
             {/* <Card title="Assignments" icon="clipboard" color="bg-blue-200" />
             <Card title="Grades" icon="bar-chart-2" color="bg-blue-100" />
             <Card title="Calendar" icon="calendar" color="bg-blue-50" /> */}
