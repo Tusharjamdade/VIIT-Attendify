@@ -122,50 +122,52 @@
 // export default Signin;
 
 
-import React, { useState } from 'react';
-import { View, TextInput, Button, Alert, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router'; 
-import firebase from "../(auth)/firebase";
-const Signin = () => {
-  const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+// import React, { useState } from 'react';
+// import { View, TextInput, Button, Alert, StyleSheet } from 'react-native';
+// import { useRouter } from 'expo-router'; 
+// import firebase from "../(auth)/firebase";
+// const Signin = () => {
+//   const router = useRouter();
+//   const [email, setEmail] = useState('');
+//   const [password, setPassword] = useState('');
 
-  const signIn = async () => {
-    try {
-      await firebase.auth().signInWithEmailAndPassword(email, password);
-      Alert.alert('Login Successful!');
-      router.push({
-        pathname:"/home"
-      })
-    } catch (error) {
-      Alert.alert('Error', error.message);
-    }
-  };
+//   const signIn = async () => {
+//     try {
+//       await firebase.auth().signInWithEmailAndPassword(email, password);
+//       Alert.alert('Login Successful!');
+//       router.push({
+//         pathname:"/home"
+//       })
+//     } catch (error) {
+//       Alert.alert('Error', error.message);
+//     }
+//   };
 
-  return (
-    <View style={styles.container}>
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
-      <Button title="Sign In" onPress={signIn} />
-    </View>
-  );
-};
+//   return (
+//     <View style={styles.container}>
+//       <TextInput
+//         style={styles.input}
+//         placeholder="Email"
+//         value={email}
+//         onChangeText={setEmail}
+//       />
+//       <TextInput
+//         style={styles.input}
+//         placeholder="Password"
+//         secureTextEntry
+//         value={password}
+//         onChangeText={setPassword}
+//       />
+//       <Button title="Sign In" onPress={signIn} />
+//     </View>
+//   );
+// };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 20 },
-  input: { borderWidth: 1, padding: 10, marginVertical: 10, borderRadius: 5 },
-});
+// const styles = StyleSheet.create({
+//   container: { flex: 1, justifyContent: 'center', padding: 20 },
+//   input: { borderWidth: 1, padding: 10, marginVertical: 10, borderRadius: 5 },
+// });
 
-export default Signin;
+// export default Signin;
+
+
