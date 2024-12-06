@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "353400889247",
+    "project_id": "viit-attendify",
+    "storage_bucket": "viit-attendify.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:353400889247:android:55f9aeee1c46b751efe7aa",
+        "android_client_info": {
+          "package_name": "tushar786123.VIITAttendify"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDdRgNShCR88I95G6kcrcdA3jAxASF5FPY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

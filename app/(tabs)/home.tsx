@@ -1,37 +1,80 @@
-import React from 'react';
-import { View, Text, Image, ImageBackground, ScrollView, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, Image, ImageBackground, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import Card from '@/components/card';
 import { router } from 'expo-router';
-import firebase from '../(auth)/firebase';
+import { auth, firestore } from '../(auth)/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+
 const Home = () => {
-  const currentUser = firebase.auth().currentUser;
+  const [currentUser, setCurrentUser] = useState(null); // To store user details
+  const [loading, setLoading] = useState(true); // To manage loading state
+
+  const fetchCurrentUserDetails = async () => {
+    try {
+      const user = auth.currentUser;
+      if (user) {
+        const userDoc = await getDoc(doc(firestore, 'users', user.uid)); // Fetch user document from Firestore
+        if (userDoc.exists()) {
+          setCurrentUser(userDoc.data()); // Update state with user details
+        } else {
+          console.log('User document does not exist');
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching user details:', error);
+    } finally {
+      setLoading(false); // Stop loading spinner
+    }
+  };
+
+  useEffect(() => {
+    fetchCurrentUserDetails(); // Fetch user details on component mount
+  }, []);
+
+  if (loading) {
+    // Show loading spinner while fetching data
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#003366" />
+      </View>
+    );
+  }
+
+  if (!currentUser) {
+    // Show error message if user details could not be fetched
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ fontSize: 18, color: 'red' }}>Failed to load user details</Text>
+      </View>
+    );
+  }
+
   return (
-    <ImageBackground
-      source={{ uri: '' }}
-      className="flex-1 bg-white"
-    >
+    <ImageBackground source={{ uri: '' }} className="flex-1 bg-white">
       <ScrollView className="flex-1">
         {/* Profile Section */}
         <View style={styles.profileSection}>
           <View style={styles.profileHeader}>
             <Image
-              source={{ uri: 'https://randomuser.me/api/portraits/women/44.jpg' }}
+              source={{
+                uri: currentUser.profileImage || 'https://randomuser.me/api/portraits/women/44.jpg',
+              }}
               style={styles.avatar}
             />
             <View>
-              <Text style={styles.profileName}>{JSON.stringify(currentUser)}</Text>
-              <Text style={styles.profileRole}>Computer Science Student</Text>
+              <Text style={styles.profileName}>
+                {currentUser.firstName} {currentUser.lastName}
+              </Text>
+              <Text style={styles.profileRole}>{currentUser.email}</Text>
             </View>
           </View>
           <View style={styles.welcomeSection}>
-            <Text style={styles.welcomeTitle}>Hi, Sarah.</Text>
+            <Text style={styles.welcomeTitle}>Hi, {currentUser.firstName}</Text>
             <Text style={styles.welcomeSubtitle}>Welcome to your Class</Text>
           </View>
           <View style={styles.bioContainer}>
             <Text style={styles.bioTitle}>Student Bio</Text>
-            <Text style={styles.bioDescription}>
-              Passionate about AI and machine learning, I'm a third-year CS student with a knack for problem-solving and a love for coding. When I'm not debugging, you'll find me exploring new tech or contributing to open-source projects.
-            </Text>
+            <Text style={styles.bioDescription}>{currentUser.role}</Text>
           </View>
         </View>
 
@@ -39,18 +82,38 @@ const Home = () => {
         <View style={styles.dashboardSection}>
           <Text style={styles.dashboardTitle}>My Dashboard</Text>
           <View style={styles.cardContainer}>
-            <Card title="Attendance" icon="user-check" color="bg-blue-500" onPress={()=>{
-              router.push({pathname:"/attendance"})
-            }}/>
-            <Card title="Today's Schedule" icon="book-open" color="bg-blue-400" onPress={()=>{
-              router.push({pathname:"/"})
-            }}/>
-            <Card title="Support" icon="help-circle" color="bg-blue-300" onPress={()=>{
-              router.push({pathname:"/support"})
-            }}/>
-            {/* <Card title="Assignments" icon="clipboard" color="bg-blue-200" />
-            <Card title="Grades" icon="bar-chart-2" color="bg-blue-100" />
-            <Card title="Calendar" icon="calendar" color="bg-blue-50" /> */}
+            <Card
+              title="Attendance"
+              icon="user-check"
+              color="bg-blue-500"
+              onPress={() => {
+                router.push({ pathname: '/attendance' });
+              }}
+            />
+            <Card
+              title="Today's Schedule"
+              icon="book-open"
+              color="bg-blue-400"
+              onPress={() => {
+                router.push({ pathname: '/' });
+              }}
+            />
+            <Card
+              title="Support"
+              icon="help-circle"
+              color="bg-blue-300"
+              onPress={() => {
+                router.push({ pathname: '/support' });
+              }}
+            />
+            <Card
+              title="Add Lecture"
+              icon="add-circle"
+              color="bg-blue-300"
+              onPress={() => {
+                router.push({ pathname: '/postlecture' });
+              }}
+            />
           </View>
         </View>
       </ScrollView>
