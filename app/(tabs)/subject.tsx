@@ -1,23 +1,25 @@
-import  { useEffect, useState } from 'react';
-import { View, Text, ScrollView, Image, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, ScrollView, Image, TouchableOpacity, Alert, ActivityIndicator, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router'; 
+import { useRouter } from 'expo-router';
 import { auth, firestore } from '../(auth)/firebase';
-import { doc, getDoc } from 'firebase/firestore';
-import { ActivityIndicator } from 'react-native';
+import { deleteDoc, doc, getDoc } from 'firebase/firestore';
+import { deleteUser, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 
 const Subject = () => {
-  const router = useRouter(); // Use `useRouter` instead of `router`
-  const [currentUser, setCurrentUser] = useState(null); // To store user details
-  const [loading, setLoading] = useState(true); // To manage loading state
+  const router = useRouter();
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [password, setPassword] = useState(''); // State to store user-entered password
+  const [isDeleting, setIsDeleting] = useState(false); // State to manage delete action
 
   const fetchCurrentUserDetails = async () => {
     try {
       const user = auth.currentUser;
       if (user) {
-        const userDoc = await getDoc(doc(firestore, 'users', user.uid)); // Fetch user document from Firestore
+        const userDoc = await getDoc(doc(firestore, 'users', user.uid));
         if (userDoc.exists()) {
-          setCurrentUser(userDoc.data()); // Update state with user details
+          setCurrentUser(userDoc.data());
         } else {
           console.log('User document does not exist');
         }
@@ -25,16 +27,90 @@ const Subject = () => {
     } catch (error) {
       console.error('Error fetching user details:', error);
     } finally {
-      setLoading(false); // Stop loading spinner
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchCurrentUserDetails(); // Fetch user details on component mount
+    fetchCurrentUserDetails();
   }, []);
 
+  const handleDeleteUser = async () => {
+    if (!auth.currentUser) {
+      Alert.alert('Error', 'No user is logged in.');
+      return;
+    }
+
+    const user = auth.currentUser;
+    const userUid = user.uid;
+
+    Alert.alert(
+      'Delete Account',
+      'Are you sure you want to delete your account? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            setIsDeleting(true);
+            try {
+              // Prompt for password input if not already entered
+              if (!password) {
+                Alert.prompt(
+                  'Reauthentication Required',
+                  'Please enter your password:',
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                      text: 'Submit',
+                      onPress: async (inputPassword) => {
+                        setPassword(inputPassword);
+                        await handleReauthenticationAndDelete(user, userUid, inputPassword);
+                      },
+                    },
+                  ],
+                  'secure-text'
+                );
+              } else {
+                await handleReauthenticationAndDelete(user, userUid, password);
+              }
+            } catch (error) {
+              console.error('Error during delete:', error);
+            } finally {
+              setIsDeleting(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleReauthenticationAndDelete = async (user, userUid, inputPassword) => {
+    try {
+      const credential = EmailAuthProvider.credential(user.email, inputPassword);
+      await reauthenticateWithCredential(user, credential);
+
+      // Delete Firestore document
+      const userDocRef = doc(firestore, 'users', userUid);
+      await deleteDoc(userDocRef);
+
+      // Delete user from Firebase Authentication
+      await deleteUser(user);
+
+      Alert.alert('Account Deleted', 'Your account has been deleted successfully.');
+      router.replace('/');
+    } catch (error) {
+      if (error.code === 'auth/requires-recent-login') {
+        Alert.alert('Reauthentication Required', 'Please log in again to delete your account.');
+      } else {
+        Alert.alert('Error', `Failed to delete account: ${error.message}`);
+      }
+      console.error('Error deleting user:', error);
+    }
+  };
+
   if (loading) {
-    // Show loading spinner while fetching data
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#003366" />
@@ -43,13 +119,13 @@ const Subject = () => {
   }
 
   if (!currentUser) {
-    // Show error message if user details could not be fetched
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <Text style={{ fontSize: 18, color: 'red' }}>Failed to load user details</Text>
       </View>
     );
   }
+
   const classes = [
     {
       letter: 'M',
@@ -61,36 +137,7 @@ const Subject = () => {
       teacher: 'Dr. Alan Smith',
       color: '#4CAF50',
     },
-    {
-      letter: 'P',
-      subject: 'Physics',
-      startTime: '11:00 AM',
-      endTime: '12:15 PM',
-      date: '05-Dec-2024',
-      location: 'Room 202',
-      teacher: 'Dr. Sarah Taylor',
-      color: '#2196F3',
-    },
-    {
-      letter: 'C',
-      subject: 'Computer Science',
-      startTime: '02:00 PM',
-      endTime: '03:15 PM',
-      date: '05-Dec-2024',
-      location: 'Lab 303',
-      teacher: 'Dr. Emily Brown',
-      color: '#9C27B0',
-    },
-    {
-      letter: 'E',
-      subject: 'English Literature',
-      startTime: '03:30 PM',
-      endTime: '04:45 PM',
-      date: '05-Dec-2024',
-      location: 'Room 404',
-      teacher: 'Dr. Henry Adams',
-      color: '#FF9800',
-    },
+    // Add other subjects here
   ];
 
   const handleSubjectPress = (subjectDetails) => {
@@ -109,7 +156,9 @@ const Subject = () => {
             style={{ width: 80, height: 80, borderRadius: 40 }}
           />
           <View style={{ marginLeft: 16 }}>
-            <Text style={{ fontSize: 20, fontWeight: 'bold' }}>{currentUser.firstName} {currentUser.lastName}</Text>
+            <Text style={{ fontSize: 20, fontWeight: 'bold' }}>
+              {currentUser.firstName} {currentUser.lastName}
+            </Text>
             <Text style={{ fontSize: 16, color: '#666' }}>Computer Science Student</Text>
           </View>
         </View>
@@ -120,9 +169,7 @@ const Subject = () => {
       </View>
 
       <View style={{ padding: 16 }}>
-        <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 16 }}>
-          Today's Schedule
-        </Text>
+        <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 16 }}>Today's Schedule</Text>
         {classes.map((item, index) => (
           <TouchableOpacity
             key={index}
@@ -164,11 +211,23 @@ const Subject = () => {
             <Ionicons name="chevron-forward" size={24} color="#666" />
           </TouchableOpacity>
         ))}
+        <TouchableOpacity
+          onPress={handleDeleteUser}
+          disabled={isDeleting}
+          style={{
+            backgroundColor: isDeleting ? '#d3d3d3' : 'red',
+            padding: 12,
+            marginTop: 16,
+            borderRadius: 5,
+          }}
+        >
+          <Text style={{ color: 'white', fontWeight: 'bold', textAlign: 'center' }}>
+            {isDeleting ? 'Deleting...' : 'Delete User'}
+          </Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
 };
 
 export default Subject;
-
-

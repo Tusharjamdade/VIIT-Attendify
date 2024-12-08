@@ -21,6 +21,7 @@ import { auth, firestore } from '../(auth)/firebase'; // Adjust this import path
 import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
+  signOut,
 } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 
@@ -59,6 +60,7 @@ const Signup = () => {
 
       // Send email verification
       await sendEmailVerification(user);
+      await signOut(auth);
       Alert.alert(
         'Verify Email',
         'A verification email has been sent to your email address. Please verify before proceeding.'

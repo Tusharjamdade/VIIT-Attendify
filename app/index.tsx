@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Button, Al
 import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
 import firebase from "../app/(auth)/firebase";
+import { SafeAreaView } from 'react-native-safe-area-context';
 export default function AttendanceScreen() {
   const classes = [
     { letter: 'M', subject: 'Mathematics I', time: '09:30 am', color: '#E3F2FD' },
@@ -12,7 +13,8 @@ export default function AttendanceScreen() {
   ];
   const logout = async () => {
     try {
-      await firebase.auth().signOut();
+      // await firebase.auth().signOut();
+      
       Alert.alert('Logged out successfully!');
     } catch (error) {
       Alert.alert('Error', error.message);
@@ -20,6 +22,7 @@ export default function AttendanceScreen() {
   };
   
   return (
+    <SafeAreaView style={styles.container}>
     <ScrollView style={styles.container}>
       {/* <View style={styles.header}>
         <Ionicons name="home-outline" size={24} color="#000" />
@@ -68,10 +71,12 @@ export default function AttendanceScreen() {
       <Link href={"/subject"}>subject</Link>
       <Link href={"/signin"}>Signin</Link>
       <Link href={"/signup"}>Signup</Link>
+      <Link href={"/face"}>face</Link>
      
       <Button title="Logout" onPress={logout} />
 
     </ScrollView>
+    </SafeAreaView>
   );
 }
 

@@ -3,6 +3,7 @@ import { View, Text, Image, TextInput, TouchableOpacity, ScrollView, Alert } fro
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { deleteUser } from 'firebase/auth';
 
 const Profile = () => {
   const [image, setImage] = useState('https://randomuser.me/api/portraits/men/1.jpg');
@@ -28,7 +29,8 @@ const Profile = () => {
     // Implement actual camera opening and face recognition here
   };
 
-  const changeFingerprint = () => {
+  const changeFingerprint = async() => {
+  
     Alert.alert('Fingerprint', 'This would access the fingerprint sensor to update the fingerprint.');
     // Implement actual fingerprint change functionality here
   };

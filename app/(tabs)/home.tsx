@@ -4,6 +4,7 @@ import Card from '@/components/card';
 import { router } from 'expo-router';
 import { auth, firestore } from '../(auth)/firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Home = () => {
   const [currentUser, setCurrentUser] = useState(null); // To store user details
@@ -50,6 +51,7 @@ const Home = () => {
   }
 
   return (
+    <SafeAreaView className="flex-1 bg-gray-100">
     <ImageBackground source={{ uri: '' }} className="flex-1 bg-white">
       <ScrollView className="flex-1">
         {/* Profile Section */}
@@ -69,13 +71,13 @@ const Home = () => {
             </View>
           </View>
           <View style={styles.welcomeSection}>
-            <Text style={styles.welcomeTitle}>Hi, {currentUser.firstName}</Text>
+            <Text style={styles.welcomeTitle}>Hi, {currentUser.firstName}({currentUser.role})</Text>
             <Text style={styles.welcomeSubtitle}>Welcome to your Class</Text>
           </View>
-          <View style={styles.bioContainer}>
+          {/* <View style={styles.bioContainer}>
             <Text style={styles.bioTitle}>Student Bio</Text>
             <Text style={styles.bioDescription}>{currentUser.role}</Text>
-          </View>
+          </View> */}
         </View>
 
         {/* Dashboard Section */}
@@ -108,16 +110,33 @@ const Home = () => {
             />
             <Card
               title="Add Lecture"
-              icon="add-circle"
+              icon="help-circle"
               color="bg-blue-300"
               onPress={() => {
                 router.push({ pathname: '/postlecture' });
+              }}
+            />
+            <Card
+              title="Face Recognition"
+              icon="help-circle"
+              color="bg-blue-300"
+              onPress={() => {
+                router.push({ pathname: '/facerec' });
+              }}
+            />
+            <Card
+              title="Download Attendance"
+              icon="help-circle"
+              color="bg-blue-300"
+              onPress={() => {
+                router.push({ pathname: '/downloadattendance' });
               }}
             />
           </View>
         </View>
       </ScrollView>
     </ImageBackground>
+    </SafeAreaView>
   );
 };
 

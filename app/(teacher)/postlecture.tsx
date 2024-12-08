@@ -1,7 +1,266 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+// import React, { useEffect, useState } from 'react';
+// import {
+//   View,
+//   Text,
+//   TextInput,
+//   ScrollView,
+//   TouchableOpacity,
+//   ActivityIndicator,
+//   Image,
+//   Alert,
+// } from 'react-native';
+// import { Picker } from '@react-native-picker/picker';
+// import DateTimePicker from '@react-native-community/datetimepicker';
+// import { auth, firestore } from '../(auth)/firebase'; // Ensure the correct Firebase file path
+// import { doc, getDoc, collection, addDoc } from 'firebase/firestore';
+// import 'nativewind';
+
+// const subjects = ['Mathematics', 'Science', 'History', 'Literature', 'Physics', 'Chemistry', 'Biology'];
+
+// export default function PostLecturePage() {
+//   const [subject, setSubject] = useState(subjects[0]);
+//   const [startTime, setStartTime] = useState(new Date());
+//   const [endTime, setEndTime] = useState(new Date());
+//   const [lectureDate, setLectureDate] = useState(new Date());
+//   const [location, setLocation] = useState('');
+//   const [teacherName, setTeacherName] = useState('');
+//   const [showStartPicker, setShowStartPicker] = useState(false);
+//   const [showEndPicker, setShowEndPicker] = useState(false);
+//   const [showDatePicker, setShowDatePicker] = useState(false);
+//   const [currentUser, setCurrentUser] = useState(null);
+//   const [loading, setLoading] = useState(true);
+
+//   const fetchCurrentUserDetails = async () => {
+//     try {
+//       const user = auth.currentUser;
+//       if (user) {
+//         const userDoc = await getDoc(doc(firestore, 'users', user.uid));
+//         if (userDoc.exists()) {
+//           const userData = userDoc.data();
+//           setCurrentUser(userData);
+//           setTeacherName(`${userData.firstName} ${userData.lastName}`);
+//         } else {
+//           Alert.alert('Error', 'User document does not exist');
+//         }
+//       }
+//     } catch (error) {
+//       console.error('Error fetching user details:', error);
+//       Alert.alert('Error', 'Failed to fetch user details');
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     fetchCurrentUserDetails();
+//   }, []);
+
+//   const onChangeDate = (event, selectedDate) => {
+//     const currentDate = selectedDate || lectureDate;
+//     setShowDatePicker(false);
+//     setLectureDate(currentDate);
+//   };
+
+//   const onChangeStartTime = (event, selectedTime) => {
+//     const currentTime = selectedTime || startTime;
+//     setShowStartPicker(false);
+//     setStartTime(currentTime);
+//   };
+
+//   const onChangeEndTime = (event, selectedTime) => {
+//     const currentTime = selectedTime || endTime;
+//     setShowEndPicker(false);
+//     setEndTime(currentTime);
+//   };
+
+//   const validateForm = () => {
+//     if (!location.trim()) {
+//       Alert.alert('Validation Error', 'Please enter a valid location.');
+//       return false;
+//     }
+//     if (endTime <= startTime) {
+//       Alert.alert('Validation Error', 'End time must be later than start time.');
+//       return false;
+//     }
+//     return true;
+//   };
+
+//   const handleSubmit = async () => {
+//     if (!validateForm()) return;
+
+//     try {
+//       const user = auth.currentUser;
+//       if (user) {
+//         const lecturesRef = collection(firestore, `users/${user.uid}/lectures`);
+//         await addDoc(lecturesRef, {
+//           subject,
+//           startTime: startTime.toISOString(),
+//           endTime: endTime.toISOString(),
+//           lectureDate: lectureDate.toISOString(),
+//           location,
+//           teacherName,
+//         });
+//         Alert.alert('Success', 'Lecture details successfully posted!');
+//         setLocation('');
+//       } else {
+//         Alert.alert('Error', 'No user is logged in.');
+//       }
+//     } catch (error) {
+//       console.error('Error posting lecture details:', error);
+//       Alert.alert('Error', 'Failed to post lecture details. Please try again.');
+//     }
+//   };
+
+//   if (loading) {
+//     return (
+//       <View className="flex-1 justify-center items-center">
+//         <ActivityIndicator size="large" color="#003366" />
+//       </View>
+//     );
+//   }
+
+//   if (!currentUser) {
+//     return (
+//       <View className="flex-1 justify-center items-center">
+//         <Text className="text-lg text-red-500">Failed to load user details</Text>
+//       </View>
+//     );
+//   }
+
+//   return (
+//     <ScrollView className="flex-1 bg-white p-5">
+//       <View className="flex-row items-center mb-4">
+//         <Image
+//           source={{
+//             uri: currentUser.profileImage || 'https://randomuser.me/api/portraits/men/44.jpg',
+//           }}
+//           className="w-20 h-20 rounded-full border-4 border-white mr-4"
+//         />
+//         <View>
+//           <Text className="text-lg font-bold">{currentUser.firstName} {currentUser.lastName}</Text>
+//           <Text className="text-sm text-blue-400">{currentUser.email}</Text>
+//         </View>
+//       </View>
+
+//       <Text className="text-2xl font-bold text-blue-600 text-center mb-4">Post Lecture Details</Text>
+
+//       <View className="mb-4">
+//         <Text className="text-lg text-blue-600">Subject</Text>
+//         <View className="border border-gray-300 rounded-md">
+//           <Picker
+//             selectedValue={subject}
+//             onValueChange={(itemValue) => setSubject(itemValue)}
+//           >
+//             {subjects.map((sub, index) => (
+//               <Picker.Item key={index} label={sub} value={sub} />
+//             ))}
+//           </Picker>
+//         </View>
+//       </View>
+
+//       <View className="mb-4">
+//         <Text className="text-lg text-blue-600">Start Time</Text>
+//         <TouchableOpacity
+//           onPress={() => setShowStartPicker(true)}
+//           className="p-3 bg-gray-200 rounded-md"
+//         >
+//           <Text className="text-blue-600">{startTime.toLocaleTimeString()}</Text>
+//         </TouchableOpacity>
+//         {showStartPicker && (
+//           <DateTimePicker
+//             value={startTime}
+//             mode="time"
+//             is24Hour
+//             display="default"
+//             onChange={onChangeStartTime}
+//           />
+//         )}
+//       </View>
+
+//       <View className="mb-4">
+//         <Text className="text-lg text-blue-600">End Time</Text>
+//         <TouchableOpacity
+//           onPress={() => setShowEndPicker(true)}
+//           className="p-3 bg-gray-200 rounded-md"
+//         >
+//           <Text className="text-blue-600">{endTime.toLocaleTimeString()}</Text>
+//         </TouchableOpacity>
+//         {showEndPicker && (
+//           <DateTimePicker
+//             value={endTime}
+//             mode="time"
+//             is24Hour
+//             display="default"
+//             onChange={onChangeEndTime}
+//           />
+//         )}
+//       </View>
+
+//       <View className="mb-4">
+//         <Text className="text-lg text-blue-600">Lecture Date</Text>
+//         <TouchableOpacity
+//           onPress={() => setShowDatePicker(true)}
+//           className="p-3 bg-gray-200 rounded-md"
+//         >
+//           <Text className="text-blue-600">{lectureDate.toDateString()}</Text>
+//         </TouchableOpacity>
+//         {showDatePicker && (
+//           <DateTimePicker
+//             value={lectureDate}
+//             mode="date"
+//             display="default"
+//             onChange={onChangeDate}
+//           />
+//         )}
+//       </View>
+
+//       <View className="mb-4">
+//         <Text className="text-lg text-blue-600">Location</Text>
+//         <TextInput
+//           className="border border-gray-300 rounded-md p-3 text-gray-700"
+//           onChangeText={setLocation}
+//           value={location}
+//           placeholder="Enter lecture location"
+//           placeholderTextColor="#A0AEC0"
+//         />
+//       </View>
+
+//       <View className="mb-4">
+//         <Text className="text-lg text-blue-600">Teacher Name</Text>
+//         <TextInput
+//           className="border border-gray-300 rounded-md p-3 text-gray-700 bg-gray-100"
+//           value={teacherName}
+//           editable={false} // Disable editing
+//           placeholder="Teacher name"
+//           placeholderTextColor="#A0AEC0"
+//         />
+//       </View>
+
+//       <TouchableOpacity
+//         className="bg-blue-600 p-4 rounded-md"
+//         onPress={handleSubmit}
+//       >
+//         <Text className="text-white font-bold text-lg text-center">Submit</Text>
+//       </TouchableOpacity>
+//     </ScrollView>
+//   );
+// }
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  Image,
+  Alert,
+} from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { auth, firestore } from '../(auth)/firebase'; // Ensure the correct Firebase file path
+import { doc, getDoc, collection, addDoc, setDoc } from 'firebase/firestore';
+import 'nativewind';
 
 const subjects = ['Mathematics', 'Science', 'History', 'Literature', 'Physics', 'Chemistry', 'Biology'];
 
@@ -15,6 +274,33 @@ export default function PostLecturePage() {
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchCurrentUserDetails = async () => {
+    try {
+      const user = auth.currentUser;
+      if (user) {
+        const userDoc = await getDoc(doc(firestore, 'users', user.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setCurrentUser(userData);
+          setTeacherName(`${userData.firstName} ${userData.lastName}`);
+        } else {
+          Alert.alert('Error', 'User document does not exist');
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching user details:', error);
+      Alert.alert('Error', 'Failed to fetch user details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCurrentUserDetails();
+  }, []);
 
   const onChangeDate = (event, selectedDate) => {
     const currentDate = selectedDate || lectureDate;
@@ -34,17 +320,85 @@ export default function PostLecturePage() {
     setEndTime(currentTime);
   };
 
+  const validateForm = () => {
+    if (!location.trim()) {
+      Alert.alert('Validation Error', 'Please enter a valid location.');
+      return false;
+    }
+    if (endTime <= startTime) {
+      Alert.alert('Validation Error', 'End time must be later than start time.');
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+
+    try {
+      const user = auth.currentUser;
+      if (user) {
+        const lecturesRef = collection(firestore, 'lectures');
+        await addDoc(lecturesRef, {
+          userId: user.uid,
+          subject,
+          startTime: startTime.toISOString(),
+          endTime: endTime.toISOString(),
+          lectureDate: lectureDate,
+          location,
+          teacherName,
+        });
+        Alert.alert('Success', 'Lecture details successfully posted!');
+        setLocation('');
+      } else {
+        Alert.alert('Error', 'No user is logged in.');
+      }
+    } catch (error) {
+      console.error('Error posting lecture details:', error);
+      Alert.alert('Error', 'Failed to post lecture details. Please try again.');
+    }
+  };
+
+  if (loading) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <ActivityIndicator size="large" color="#003366" />
+      </View>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <Text className="text-lg text-red-500">Failed to load user details</Text>
+      </View>
+    );
+  }
+
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Post Lecture Details</Text>
-      
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Subject</Text>
-        <View style={styles.pickerContainer}>
+    <ScrollView className="flex-1 bg-white p-5">
+      <View className="flex-row items-center mb-4">
+        <Image
+          source={{
+            uri: currentUser.profileImage || 'https://randomuser.me/api/portraits/men/44.jpg',
+          }}
+          className="w-20 h-20 rounded-full border-4 border-white mr-4"
+        />
+        <View>
+          <Text className="text-lg font-bold">{currentUser.firstName} {currentUser.lastName}</Text>
+          <Text className="text-sm text-blue-400">{currentUser.email}</Text>
+        </View>
+      </View>
+
+      <Text className="text-2xl font-bold text-blue-600 text-center mb-4">Post Lecture Details</Text>
+
+      {/* Subject Picker */}
+      <View className="mb-4">
+        <Text className="text-lg text-blue-600">Subject</Text>
+        <View className="border border-gray-300 rounded-md">
           <Picker
             selectedValue={subject}
             onValueChange={(itemValue) => setSubject(itemValue)}
-            style={styles.picker}
           >
             {subjects.map((sub, index) => (
               <Picker.Item key={index} label={sub} value={sub} />
@@ -53,42 +407,54 @@ export default function PostLecturePage() {
         </View>
       </View>
 
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Start Time</Text>
-        <TouchableOpacity onPress={() => setShowStartPicker(true)} style={styles.dateTimeButton}>
-          <Text style={styles.dateTimeText}>{startTime.toLocaleTimeString()}</Text>
+      {/* Start Time Picker */}
+      <View className="mb-4">
+        <Text className="text-lg text-blue-600">Start Time</Text>
+        <TouchableOpacity
+          onPress={() => setShowStartPicker(true)}
+          className="p-3 bg-gray-200 rounded-md"
+        >
+          <Text className="text-blue-600">{startTime.toLocaleTimeString()}</Text>
         </TouchableOpacity>
         {showStartPicker && (
           <DateTimePicker
             value={startTime}
             mode="time"
-            is24Hour={true}
+            is24Hour
             display="default"
             onChange={onChangeStartTime}
           />
         )}
       </View>
 
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>End Time</Text>
-        <TouchableOpacity onPress={() => setShowEndPicker(true)} style={styles.dateTimeButton}>
-          <Text style={styles.dateTimeText}>{endTime.toLocaleTimeString()}</Text>
+      {/* End Time Picker */}
+      <View className="mb-4">
+        <Text className="text-lg text-blue-600">End Time</Text>
+        <TouchableOpacity
+          onPress={() => setShowEndPicker(true)}
+          className="p-3 bg-gray-200 rounded-md"
+        >
+          <Text className="text-blue-600">{endTime.toLocaleTimeString()}</Text>
         </TouchableOpacity>
         {showEndPicker && (
           <DateTimePicker
             value={endTime}
             mode="time"
-            is24Hour={true}
+            is24Hour
             display="default"
             onChange={onChangeEndTime}
           />
         )}
       </View>
 
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Lecture Date</Text>
-        <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.dateTimeButton}>
-          <Text style={styles.dateTimeText}>{lectureDate.toDateString()}</Text>
+      {/* Lecture Date Picker */}
+      <View className="mb-4">
+        <Text className="text-lg text-blue-600">Lecture Date</Text>
+        <TouchableOpacity
+          onPress={() => setShowDatePicker(true)}
+          className="p-3 bg-gray-200 rounded-md"
+        >
+          <Text className="text-blue-600">{lectureDate.toDateString()}</Text>
         </TouchableOpacity>
         {showDatePicker && (
           <DateTimePicker
@@ -100,310 +466,35 @@ export default function PostLecturePage() {
         )}
       </View>
 
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Location</Text>
+      {/* Location Input */}
+      <View className="mb-4">
+        <Text className="text-lg text-blue-600">Location</Text>
         <TextInput
-          style={styles.input}
+          className="border border-gray-300 rounded-md p-3 text-gray-700"
           onChangeText={setLocation}
           value={location}
           placeholder="Enter lecture location"
           placeholderTextColor="#A0AEC0"
         />
       </View>
+      <View className="mb-4">
+  <Text className="text-lg text-blue-600">Teacher Name</Text>
+  <TextInput
+    className="border border-gray-300 rounded-md p-3 text-gray-700 bg-gray-100"
+    value={teacherName}
+    editable={false} // Prevent editing
+    placeholder="Teacher name will appear here"
+    placeholderTextColor="#A0AEC0"
+  />
+</View>
 
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Teacher Name</Text>
-        <TextInput
-          style={styles.input}
-          onChangeText={setTeacherName}
-          value={teacherName}
-          placeholder="Enter teacher name"
-          placeholderTextColor="#A0AEC0"
-        />
-      </View>
-
-      <TouchableOpacity style={styles.submitButton}>
-        <Text style={styles.submitButtonText}>Submit</Text>
+      {/* Submit Button */}
+      <TouchableOpacity
+        className="bg-blue-600 p-4 rounded-md"
+        onPress={handleSubmit}
+      >
+        <Text className="text-white font-bold text-lg text-center">Submit</Text>
       </TouchableOpacity>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#2B6CB0',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 16,
-    color: '#2B6CB0',
-    marginBottom: 5,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 5,
-    padding: 10,
-    fontSize: 16,
-    color: '#4A5568',
-  },
-  pickerContainer: {
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 5,
-    overflow: 'hidden',
-  },
-  picker: {
-    height: 50,
-    width: '100%',
-  },
-  dateTimeButton: {
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 5,
-    padding: 10,
-  },
-  dateTimeText: {
-    fontSize: 16,
-    color: '#4A5568',
-  },
-  submitButton: {
-    backgroundColor: '#2B6CB0',
-    padding: 15,
-    borderRadius: 5,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  submitButtonText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-});
-
-// import React, { useState } from 'react';
-// import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
-// import { Picker } from '@react-native-picker/picker';
-// import DateTimePicker from '@react-native-community/datetimepicker';
-// import DateTimePickerModal from "react-native-modal-datetime-picker";
-
-// const subjects = ['Mathematics', 'Science', 'History', 'Literature', 'Physics', 'Chemistry', 'Biology'];
-
-// export default function PostLecturePage() {
-//   const [subject, setSubject] = useState(subjects[0]);
-//   const [startDateTime, setStartDateTime] = useState(new Date());
-//   const [endDateTime, setEndDateTime] = useState(new Date());
-//   const [location, setLocation] = useState('');
-//   const [teacherName, setTeacherName] = useState('');
-  
-//   const [showStartPicker, setShowStartPicker] = useState(false);
-//   const [showEndPicker, setShowEndPicker] = useState(false);
-//   const [pickerMode, setPickerMode] = useState('date');
-
-//   const showDateTimePicker = (type, mode) => {
-//     if (type === 'start') {
-//       setShowStartPicker(true);
-//     } else {
-//       setShowEndPicker(true);
-//     }
-//     setPickerMode(mode);
-//   };
-
-//   const hideDateTimePicker = (type) => {
-//     if (type === 'start') {
-//       setShowStartPicker(false);
-//     } else {
-//       setShowEndPicker(false);
-//     }
-//   };
-
-//   const handleDateTimeConfirm = (type, selectedDateTime) => {
-//     if (type === 'start') {
-//       setStartDateTime(selectedDateTime);
-//       setShowStartPicker(false);
-//     } else {
-//       setEndDateTime(selectedDateTime);
-//       setShowEndPicker(false);
-//     }
-//   };
-
-//   const renderDateTimePicker = (type) => {
-//     const isStartPicker = type === 'start';
-//     const show = isStartPicker ? showStartPicker : showEndPicker;
-//     const dateTime = isStartPicker ? startDateTime : endDateTime;
-
-//     if (Platform.OS === 'ios') {
-//       return (
-//         <View>
-//           {show && (
-//             <DateTimePicker
-//               value={dateTime}
-//               mode={pickerMode}
-//               is24Hour={true}
-//               display="default"
-//               onChange={(event, selectedDate) => {
-//                 if (event.type === 'set') {
-//                   handleDateTimeConfirm(type, selectedDate);
-//                 } else {
-//                   hideDateTimePicker(type);
-//                 }
-//               }}
-//             />
-//           )}
-//         </View>
-//       );
-//     } else {
-//       return (
-//         <DateTimePickerModal
-//           isVisible={show}
-//           mode={pickerMode}
-//           onConfirm={(date) => handleDateTimeConfirm(type, date)}
-//           onCancel={() => hideDateTimePicker(type)}
-//           date={dateTime}
-//         />
-//       );
-//     }
-//   };
-
-//   const formatDateTime = (date) => {
-//     return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
-//   };
-
-//   return (
-//     <ScrollView style={styles.container}>
-//       <Text style={styles.title}>Post Lecture Details</Text>
-      
-//       <View style={styles.inputContainer}>
-//         <Text style={styles.label}>Subject</Text>
-//         <View style={styles.pickerContainer}>
-//           <Picker
-//             selectedValue={subject}
-//             onValueChange={(itemValue) => setSubject(itemValue)}
-//             style={styles.picker}
-//           >
-//             {subjects.map((sub, index) => (
-//               <Picker.Item key={index} label={sub} value={sub} />
-//             ))}
-//           </Picker>
-//         </View>
-//       </View>
-
-//       <View style={styles.inputContainer}>
-//         <Text style={styles.label}>Start Date and Time</Text>
-//         <TouchableOpacity onPress={() => showDateTimePicker('start', 'date')} style={styles.dateTimeButton}>
-//           <Text style={styles.dateTimeText}>{formatDateTime(startDateTime)}</Text>
-//         </TouchableOpacity>
-//         {renderDateTimePicker('start')}
-//       </View>
-
-//       <View style={styles.inputContainer}>
-//         <Text style={styles.label}>End Date and Time</Text>
-//         <TouchableOpacity onPress={() => showDateTimePicker('end', 'date')} style={styles.dateTimeButton}>
-//           <Text style={styles.dateTimeText}>{formatDateTime(endDateTime)}</Text>
-//         </TouchableOpacity>
-//         {renderDateTimePicker('end')}
-//       </View>
-
-//       <View style={styles.inputContainer}>
-//         <Text style={styles.label}>Location</Text>
-//         <TextInput
-//           style={styles.input}
-//           onChangeText={setLocation}
-//           value={location}
-//           placeholder="Enter lecture location"
-//           placeholderTextColor="#A0AEC0"
-//         />
-//       </View>
-
-//       <View style={styles.inputContainer}>
-//         <Text style={styles.label}>Teacher Name</Text>
-//         <TextInput
-//           style={styles.input}
-//           onChangeText={setTeacherName}
-//           value={teacherName}
-//           placeholder="Enter teacher name"
-//           placeholderTextColor="#A0AEC0"
-//         />
-//       </View>
-
-//       <TouchableOpacity style={styles.submitButton}>
-//         <Text style={styles.submitButtonText}>Submit</Text>
-//       </TouchableOpacity>
-//     </ScrollView>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: '#FFFFFF',
-//     padding: 20,
-//   },
-//   title: {
-//     fontSize: 24,
-//     fontWeight: 'bold',
-//     color: '#2B6CB0',
-//     marginBottom: 20,
-//     textAlign: 'center',
-//   },
-//   inputContainer: {
-//     marginBottom: 20,
-//   },
-//   label: {
-//     fontSize: 16,
-//     color: '#2B6CB0',
-//     marginBottom: 5,
-//   },
-//   input: {
-//     borderWidth: 1,
-//     borderColor: '#E2E8F0',
-//     borderRadius: 5,
-//     padding: 10,
-//     fontSize: 16,
-//     color: '#4A5568',
-//   },
-//   pickerContainer: {
-//     borderWidth: 1,
-//     borderColor: '#E2E8F0',
-//     borderRadius: 5,
-//     overflow: 'hidden',
-//   },
-//   picker: {
-//     height: 50,
-//     width: '100%',
-//   },
-//   dateTimeButton: {
-//     borderWidth: 1,
-//     borderColor: '#E2E8F0',
-//     borderRadius: 5,
-//     padding: 10,
-//   },
-//   dateTimeText: {
-//     fontSize: 16,
-//     color: '#4A5568',
-//   },
-//   submitButton: {
-//     backgroundColor: '#2B6CB0',
-//     padding: 15,
-//     borderRadius: 5,
-//     alignItems: 'center',
-//     marginTop: 20,
-//   },
-//   submitButtonText: {
-//     color: '#FFFFFF',
-//     fontSize: 18,
-//     fontWeight: 'bold',
-//   },
-// });
-
