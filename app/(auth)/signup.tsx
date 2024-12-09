@@ -17,7 +17,7 @@ import {
   EyeIcon,
   EyeSlashIcon,
 } from 'react-native-heroicons/outline';
-import { auth, firestore } from '../(auth)/firebase'; // Adjust this import path
+import { auth, firestore } from '../../src/firebase'; // Adjust this import path
 import {
   createUserWithEmailAndPassword,
   sendEmailVerification,

@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Button, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
-import firebase from "../app/(auth)/firebase";
+import firebase from "../src/firebase";
 import { SafeAreaView } from 'react-native-safe-area-context';
 export default function AttendanceScreen() {
   const classes = [

@@ -229,7 +229,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Alert, TextInput, TouchableOpacity } from 'react-native';
 import { collection, addDoc } from 'firebase/firestore';
-import { firestore } from '../(auth)/firebase';
+import { firestore } from '../../src/firebase';
 
 // Dummy function to get current user details
 const getCurrentUserDetails = () => {

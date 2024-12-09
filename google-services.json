@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "353400889247",
+    "firebase_url": "https://viit-attendify-default-rtdb.asia-southeast1.firebasedatabase.app",
     "project_id": "viit-attendify",
     "storage_bucket": "viit-attendify.firebasestorage.app"
   },
@@ -12,7 +13,12 @@
           "package_name": "tushar786123.VIITAttendify"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "353400889247-tuiqecf1a8lep66tr6tc3ekjdma540i3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDdRgNShCR88I95G6kcrcdA3jAxASF5FPY"
@@ -20,7 +26,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "353400889247-tuiqecf1a8lep66tr6tc3ekjdma540i3.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "353400889247-kfi9ia9v7bd573b7munddl3bil4vr91d.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "tushar786123.VIITAttendify"
+              }
+            }
+          ]
         }
       }
     }

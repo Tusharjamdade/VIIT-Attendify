@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, Image, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, Image, TouchableOpacity, Alert, ActivityIndicator, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { auth, firestore } from '../(auth)/firebase';
+import { auth, firestore } from '../../src/firebase';
 import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
 
 const DownloadAttendance = () => {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [lectures, setLectures] = useState([]);
 
   const fetchCurrentUserDetails = async () => {
@@ -25,9 +26,14 @@ const DownloadAttendance = () => {
             where('userId', '==', user.uid)
           );
           const lecturesSnapshot = await getDocs(lecturesQuery);
-          console.log(JSON.stringify(lecturesSnapshot))
-          console.log(currentUser)
-          const lecturesData = lecturesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+          const lecturesData = lecturesSnapshot.docs.map((doc) => {
+            const lecture = doc.data();
+            // Convert Firebase Timestamps to readable strings
+            lecture.startTime = lecture.startTime.toLocaleString() || '';
+            lecture.endTime = lecture.endTime.toLocaleString() || '';
+            lecture.lectureDate = lecture.lectureDate.toLocaleString()  || '';
+            return { id: doc.id, ...lecture };
+          });
           setLectures(lecturesData);
         } else {
           console.log('User document does not exist');
@@ -37,6 +43,7 @@ const DownloadAttendance = () => {
       console.error('Error fetching user details:', error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -44,7 +51,12 @@ const DownloadAttendance = () => {
     fetchCurrentUserDetails();
   }, []);
 
-  if (loading) {
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchCurrentUserDetails();
+  };
+
+  if (loading && !refreshing) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#003366" />
@@ -60,19 +72,15 @@ const DownloadAttendance = () => {
     );
   }
 
-  const handleSubjectPress = (lecture) => {
-    router.push({
-      pathname: '/subjectattendance',
-      params: { lectureDetails: JSON.stringify(lecture) },
-    });
-  };
-
   const handleDownload = (format) => {
     Alert.alert('Download', `Downloading attendance in ${format} format.`);
   };
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: '#f0f8ff' }}>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: '#f0f8ff' }}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+    >
       <View style={{ backgroundColor: '#ffffff', padding: 16, paddingTop: 40 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
           <Image
@@ -92,9 +100,9 @@ const DownloadAttendance = () => {
         <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 16, color: '#003366' }}>
           Your Lectures
         </Text>
-        {lectures.map((lecture, index) => (
+        {lectures.map((lecture) => (
           <View
-            key={index}
+            key={lecture.id}
             style={{
               backgroundColor: '#ffffff',
               borderRadius: 8,
@@ -115,9 +123,9 @@ const DownloadAttendance = () => {
             <Text style={{ fontSize: 14, color: '#666' }}>
               Time: {lecture.startTime} - {lecture.endTime}
             </Text>
-            <Text style={{ fontSize: 14, color: '#666' }}>Date: {lecture.date}</Text>
+            <Text style={{ fontSize: 14, color: '#666' }}>Date: {lecture.lectureDate}</Text>
             <Text style={{ fontSize: 14, color: '#666' }}>Location: {lecture.location}</Text>
-            <Text style={{ fontSize: 14, color: '#666' }}>Teacher: {lecture.teacher}</Text>
+            <Text style={{ fontSize: 14, color: '#666' }}>Teacher: {lecture.teacherName}</Text>
             <View style={{ flexDirection: 'row', marginTop: 12 }}>
               <TouchableOpacity
                 onPress={() => handleDownload('PDF')}

@@ -1,17 +1,27 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, Image, TouchableOpacity, Alert, ActivityIndicator, TextInput } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+  RefreshControl,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { auth, firestore } from '../(auth)/firebase';
-import { deleteDoc, doc, getDoc } from 'firebase/firestore';
+import { auth, firestore } from '../../src/firebase';
+import { deleteDoc, doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { deleteUser, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 
 const Subject = () => {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [password, setPassword] = useState(''); // State to store user-entered password
-  const [isDeleting, setIsDeleting] = useState(false); // State to manage delete action
+  const [refreshing, setRefreshing] = useState(false); // For pull-to-refresh
+  const [lectures, setLectures] = useState([]);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchCurrentUserDetails = async () => {
     try {
@@ -31,9 +41,46 @@ const Subject = () => {
     }
   };
 
+  const fetchLectures = async () => {
+    setLoading(true);
+    try {
+      const today = new Date();
+      const formattedDate = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+      console.log(formattedDate);
+      const lecturesRef = collection(firestore, 'lectures');
+      const q = query(lecturesRef, where('lectureDate', '==', formattedDate));
+      const querySnapshot = await getDocs(q);
+
+      const fetchedLectures = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setLectures(fetchedLectures);
+    } catch (error) {
+      console.error('Error fetching lectures:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchCurrentUserDetails();
+    await fetchLectures();
+    setRefreshing(false);
+  };
+
   useEffect(() => {
     fetchCurrentUserDetails();
+    fetchLectures();
   }, []);
+
+  const handleSubjectPress = (subjectDetails) => {
+    router.push({
+      pathname: '/subjectattendance',
+      params: { subjectDetails: JSON.stringify(subjectDetails) },
+    });
+  };
 
   const handleDeleteUser = async () => {
     if (!auth.currentUser) {
@@ -55,28 +102,21 @@ const Subject = () => {
           onPress: async () => {
             setIsDeleting(true);
             try {
-              // Prompt for password input if not already entered
-              if (!password) {
-                Alert.prompt(
-                  'Reauthentication Required',
-                  'Please enter your password:',
-                  [
-                    { text: 'Cancel', style: 'cancel' },
-                    {
-                      text: 'Submit',
-                      onPress: async (inputPassword) => {
-                        setPassword(inputPassword);
-                        await handleReauthenticationAndDelete(user, userUid, inputPassword);
-                      },
-                    },
-                  ],
-                  'secure-text'
-                );
-              } else {
-                await handleReauthenticationAndDelete(user, userUid, password);
-              }
+              const credential = EmailAuthProvider.credential(user.email, 'YourPassword'); // Replace with a password prompt
+              await reauthenticateWithCredential(user, credential);
+
+              // Delete Firestore document
+              const userDocRef = doc(firestore, 'users', userUid);
+              await deleteDoc(userDocRef);
+
+              // Delete user from Firebase Authentication
+              await deleteUser(user);
+
+              Alert.alert('Account Deleted', 'Your account has been deleted successfully.');
+              router.replace('/');
             } catch (error) {
-              console.error('Error during delete:', error);
+              Alert.alert('Error', `Failed to delete account: ${error.message}`);
+              console.error('Error deleting user:', error);
             } finally {
               setIsDeleting(false);
             }
@@ -84,30 +124,6 @@ const Subject = () => {
         },
       ]
     );
-  };
-
-  const handleReauthenticationAndDelete = async (user, userUid, inputPassword) => {
-    try {
-      const credential = EmailAuthProvider.credential(user.email, inputPassword);
-      await reauthenticateWithCredential(user, credential);
-
-      // Delete Firestore document
-      const userDocRef = doc(firestore, 'users', userUid);
-      await deleteDoc(userDocRef);
-
-      // Delete user from Firebase Authentication
-      await deleteUser(user);
-
-      Alert.alert('Account Deleted', 'Your account has been deleted successfully.');
-      router.replace('/');
-    } catch (error) {
-      if (error.code === 'auth/requires-recent-login') {
-        Alert.alert('Reauthentication Required', 'Please log in again to delete your account.');
-      } else {
-        Alert.alert('Error', `Failed to delete account: ${error.message}`);
-      }
-      console.error('Error deleting user:', error);
-    }
   };
 
   if (loading) {
@@ -126,29 +142,13 @@ const Subject = () => {
     );
   }
 
-  const classes = [
-    {
-      letter: 'M',
-      subject: 'Mathematics',
-      startTime: '09:30 AM',
-      endTime: '10:45 AM',
-      date: '05-Dec-2024',
-      location: 'Room 101',
-      teacher: 'Dr. Alan Smith',
-      color: '#4CAF50',
-    },
-    // Add other subjects here
-  ];
-
-  const handleSubjectPress = (subjectDetails) => {
-    router.push({
-      pathname: '/subjectattendance',
-      params: { subjectDetails: JSON.stringify(subjectDetails) },
-    });
-  };
-
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: '#f0f0f0' }}>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: '#f0f0f0' }}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+      }
+    >
       <View style={{ backgroundColor: '#fff', padding: 16, paddingTop: 40 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
           <Image
@@ -170,47 +170,53 @@ const Subject = () => {
 
       <View style={{ padding: 16 }}>
         <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 16 }}>Today's Schedule</Text>
-        {classes.map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            style={{
-              backgroundColor: '#fff',
-              borderRadius: 8,
-              padding: 16,
-              marginBottom: 12,
-              flexDirection: 'row',
-              alignItems: 'center',
-              shadowColor: '#000',
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 2,
-            }}
-            onPress={() => handleSubjectPress(item)}
-          >
-            <View
+        {lectures.length > 0 ? (
+          lectures.map((lecture) => (
+            <TouchableOpacity
+              key={lecture.id}
               style={{
-                width: 40,
-                height: 40,
-                borderRadius: 20,
-                justifyContent: 'center',
+                backgroundColor: '#fff',
+                borderRadius: 8,
+                padding: 16,
+                marginBottom: 12,
+                flexDirection: 'row',
                 alignItems: 'center',
-                backgroundColor: item.color,
-                marginRight: 12,
+                shadowColor: '#000',
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                elevation: 2,
               }}
+              onPress={() => handleSubjectPress(lecture)}
             >
-              <Text style={{ color: '#fff', fontSize: 18 }}>{item.letter}</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 18, fontWeight: 'bold' }}>{item.subject}</Text>
-              <Text style={{ fontSize: 14, color: '#666' }}>
-                {item.startTime} - {item.endTime} | {item.date}
-              </Text>
-              <Text style={{ fontSize: 14, color: '#666' }}>Location: {item.location}</Text>
-              <Text style={{ fontSize: 14, color: '#666' }}>Teacher: {item.teacher}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={24} color="#666" />
-          </TouchableOpacity>
-        ))}
+              <View
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  backgroundColor: '#4CAF50',
+                  marginRight: 12,
+                }}
+              >
+                <Text style={{ color: '#fff', fontSize: 18 }}>{lecture.subject[0]}</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 18, fontWeight: 'bold' }}>{lecture.subject}</Text>
+                <Text style={{ fontSize: 14, color: '#666' }}>
+                  {lecture.startTime} - {lecture.endTime} | {lecture.lectureDate}
+                </Text>
+                <Text style={{ fontSize: 14, color: '#666' }}>Location: {lecture.location}</Text>
+                <Text style={{ fontSize: 14, color: '#666' }}>Teacher: {lecture.teacherName}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={24} color="#666" />
+            </TouchableOpacity>
+          ))
+        ) : (
+          <Text style={{ fontSize: 16, color: '#666', textAlign: 'center' }}>
+            No lectures scheduled for today.
+          </Text>
+        )}
         <TouchableOpacity
           onPress={handleDeleteUser}
           disabled={isDeleting}

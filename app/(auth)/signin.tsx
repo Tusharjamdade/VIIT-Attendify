@@ -19,7 +19,7 @@ import {
 } from 'react-native-heroicons/outline';
 import { useRouter } from 'expo-router';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../(auth)/firebase'; // Adjust this path as per your project structure
+import { auth } from '../../src/firebase'; // Adjust this path as per your project structure
 
 const Signin = () => {
   const [email, setEmail] = useState('');

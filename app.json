@@ -11,11 +11,17 @@
     "ios": {
       "supportsTablet": true
     },
+    "permissions": [
+      "CAMERA",
+      "RECORD_AUDIO"
+    ],
     "android": {
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "tushar786123.VIITAttendify"
     },
     "web": {
       "bundler": "metro",
@@ -34,10 +40,26 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera",
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone",
+          "recordAudioAndroid": true
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "3340dfae-54a3-46fd-a267-37ea36dce8b1"
+      }
     }
   }
 }

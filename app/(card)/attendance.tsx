@@ -16,6 +16,7 @@ const AttendanceReport = () => {
     }]
   };
 
+  
   const pieData = [
     {
       name: 'Present',

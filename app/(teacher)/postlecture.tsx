@@ -258,8 +258,8 @@ import {
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { auth, firestore } from '../(auth)/firebase'; // Ensure the correct Firebase file path
-import { doc, getDoc, collection, addDoc, setDoc } from 'firebase/firestore';
+import { auth, firestore } from '../../src/firebase'; // Ensure the correct Firebase file path
+import { doc, getDoc, collection, addDoc } from 'firebase/firestore';
 import 'nativewind';
 
 const subjects = ['Mathematics', 'Science', 'History', 'Literature', 'Physics', 'Chemistry', 'Biology'];
@@ -302,6 +302,14 @@ export default function PostLecturePage() {
     fetchCurrentUserDetails();
   }, []);
 
+  const formatTime = (date) => {
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
+
   const onChangeDate = (event, selectedDate) => {
     const currentDate = selectedDate || lectureDate;
     setShowDatePicker(false);
@@ -342,9 +350,9 @@ export default function PostLecturePage() {
         await addDoc(lecturesRef, {
           userId: user.uid,
           subject,
-          startTime: startTime.toISOString(),
-          endTime: endTime.toISOString(),
-          lectureDate: lectureDate,
+          startTime: formatTime(startTime),
+          endTime: formatTime(endTime),
+          lectureDate: lectureDate.toISOString().split('T')[0],
           location,
           teacherName,
         });
@@ -414,13 +422,13 @@ export default function PostLecturePage() {
           onPress={() => setShowStartPicker(true)}
           className="p-3 bg-gray-200 rounded-md"
         >
-          <Text className="text-blue-600">{startTime.toLocaleTimeString()}</Text>
+          <Text className="text-blue-600">{formatTime(startTime)}</Text>
         </TouchableOpacity>
         {showStartPicker && (
           <DateTimePicker
             value={startTime}
             mode="time"
-            is24Hour
+            is24Hour={false}
             display="default"
             onChange={onChangeStartTime}
           />
@@ -434,13 +442,13 @@ export default function PostLecturePage() {
           onPress={() => setShowEndPicker(true)}
           className="p-3 bg-gray-200 rounded-md"
         >
-          <Text className="text-blue-600">{endTime.toLocaleTimeString()}</Text>
+          <Text className="text-blue-600">{formatTime(endTime)}</Text>
         </TouchableOpacity>
         {showEndPicker && (
           <DateTimePicker
             value={endTime}
             mode="time"
-            is24Hour
+            is24Hour={false}
             display="default"
             onChange={onChangeEndTime}
           />
@@ -477,16 +485,18 @@ export default function PostLecturePage() {
           placeholderTextColor="#A0AEC0"
         />
       </View>
+
+      {/* Teacher Name */}
       <View className="mb-4">
-  <Text className="text-lg text-blue-600">Teacher Name</Text>
-  <TextInput
-    className="border border-gray-300 rounded-md p-3 text-gray-700 bg-gray-100"
-    value={teacherName}
-    editable={false} // Prevent editing
-    placeholder="Teacher name will appear here"
-    placeholderTextColor="#A0AEC0"
-  />
-</View>
+        <Text className="text-lg text-blue-600">Teacher Name</Text>
+        <TextInput
+          className="border border-gray-300 rounded-md p-3 text-gray-700 bg-gray-100"
+          value={teacherName}
+          editable={false} // Prevent editing
+          placeholder="Teacher name will appear here"
+          placeholderTextColor="#A0AEC0"
+        />
+      </View>
 
       {/* Submit Button */}
       <TouchableOpacity
@@ -498,3 +508,4 @@ export default function PostLecturePage() {
     </ScrollView>
   );
 }
+

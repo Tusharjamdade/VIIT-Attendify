@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, Image, ImageBackground, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import Card from '@/components/card';
 import { router } from 'expo-router';
-import { auth, firestore } from '../(auth)/firebase';
+import { auth, firestore } from '../../src/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
