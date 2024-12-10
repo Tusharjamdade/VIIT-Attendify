@@ -3,7 +3,7 @@ import StudentProfile from '@/components/StudentProfile';
 import SubjectCard from '@/components/SubjectCard';
 import { useSearchParams } from 'expo-router/build/hooks';
 import React, { useState } from 'react';
-import { Button, PermissionsAndroid, Platform, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Button, PermissionsAndroid, Platform, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function SubjectAttendance() {
   const params = useSearchParams();
@@ -72,14 +72,14 @@ export default function SubjectAttendance() {
           presentCount={students.filter((s) => s.isPresent).length}
           totalCount={students.length}
         />
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        {/* <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
       <Text style={{ marginBottom: 20 }}>
         {location
           ? `Latitude: ${location.latitude}, Longitude: ${location.longitude}`
           : 'Location not fetched'}
       </Text>
       <Button title="Get Location" onPress={getLocation} />
-    </View>
+    </View> */}
         <StudentList students={students} toggleAttendance={toggleAttendance} />
       </ScrollView>
     </SafeAreaView>

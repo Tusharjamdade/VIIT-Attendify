@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { View, Text, StyleSheet, Image, ScrollView, SafeAreaView } from 'react-native';
 import { LineChart, PieChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
