@@ -71,7 +71,7 @@ export default function AttendanceScreen() {
       <Link href={"/subject"}>subject</Link>
       <Link href={"/signin"}>Signin</Link>
       <Link href={"/signup"}>Signup</Link>
-      <Link href={"/facerec"}>face</Link>
+      <Link href={"/(card)/facerec"}>face</Link>
      
       <Button title="Logout" onPress={logout} />
 
