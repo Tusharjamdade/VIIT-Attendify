@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   View,
@@ -6,6 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  Image,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import {
@@ -20,6 +22,7 @@ import {
 import { auth, firestore } from '../../src/firebase'; // Adjust this import path
 import {
   createUserWithEmailAndPassword,
+  deleteUser,
   sendEmailVerification,
   signOut,
 } from 'firebase/auth';
@@ -55,31 +58,47 @@ const Signup = () => {
     }
 
     try {
+      // Create user in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
       // Send email verification
       await sendEmailVerification(user);
-      await signOut(auth);
       Alert.alert(
         'Verify Email',
-        'A verification email has been sent to your email address. Please verify before proceeding.'
+        'A verification email has been sent to your email address. You have 1 minute to verify your email.'
       );
 
-      // Store user details in Firestore
-      const userDocRef = doc(firestore, 'users', user.uid);
-      const userData = {
-        uid: user.uid,
-        firstName,
-        lastName,
-        email,
-        password,
-        role,
-        createdAt: new Date(),
-      };
+      // Sign out the user until verification is complete
+      await signOut(auth);
 
-      await setDoc(userDocRef, userData);
-      Alert.alert('Success', 'Account created successfully!');
+      // Start a 1-minute timer to check verification status
+      const timer = setTimeout(async () => {
+        // Check if the user verified their email
+        await user.reload();
+        if (user.emailVerified) {
+          // Store user details in Firestore
+          const userDocRef = doc(firestore, 'users', user.uid);
+          const userData = {
+            uid: user.uid,
+            firstName,
+            lastName,
+            email,
+            role,
+            createdAt: new Date(),
+          };
+          await setDoc(userDocRef, userData);
+          Alert.alert('Success', 'Account created successfully after verification!');
+        } else {
+          await deleteUser(user)
+          Alert.alert(
+            'Verification Failed',
+            'You did not verify your email within the 30 seconds window. Please try signing up again.'
+          );
+        }
+      }, 30000); // 1-minute timeout
+
+      return () => clearTimeout(timer); // Clear timer on component unmount
     } catch (error) {
       console.error('Error signing up:', error);
       Alert.alert('Error', error.message);
@@ -201,59 +220,31 @@ const Signup = () => {
       >
         <Text className="text-white font-semibold text-lg">Sign Up</Text>
       </TouchableOpacity>
+
+            {/* Horizontal Line */}
+            <View className="flex-row items-center mb-6">
+              <View className="flex-1 h-px bg-gray-300" />
+              <Text className="mx-4 text-gray-500">or</Text>
+              <View className="flex-1 h-px bg-gray-300" />
+            </View>
+      
+            {/* Sign In with Google Button */}
+            <TouchableOpacity
+              className="w-full h-12 bg-white border border-gray-300 rounded-lg items-center justify-center shadow-md flex-row"
+              
+            >
+              <Image
+                source={{
+                  uri: 'https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg',
+                }}
+                style={{ width: 20, height: 20, marginRight: 10 }}
+              />
+              <Text className="text-gray-700 font-semibold text-lg">
+                Sign In with Google
+              </Text>
+            </TouchableOpacity>
     </ScrollView>
   );
 };
 
 export default Signup;
-
-
-
-// import React, { useState } from 'react';
-// import { View, TextInput, Button, Alert, StyleSheet } from 'react-native';
-// // import firebase from '../firebase/firebase'; // Update the path as needed
-// import firebase from './firebase';
-// const Signup = () => {
-//   const [email, setEmail] = useState('');
-//   const [password, setPassword] = useState('');
-
-//   const signUp = async () => {
-//     try {
-//       console.log('Signup process started');
-//       await firebase.auth().createUserWithEmailAndPassword(email, password);
-//       Alert.alert('Account Created Successfully!');
-//       console.log('Signup process completed');
-//     } catch (error) {
-//       Alert.alert('Error', error.message);
-//       console.error('Signup error:', error.message);
-//     }
-//   };
-
-//   return (
-//     <View style={styles.container}>
-//       <TextInput
-//         style={styles.input}
-//         placeholder="Email"
-//         value={email}
-//         onChangeText={setEmail}
-//         keyboardType="email-address"
-//         autoCapitalize="none"
-//       />
-//       <TextInput
-//         style={styles.input}
-//         placeholder="Password"
-//         secureTextEntry
-//         value={password}
-//         onChangeText={setPassword}
-//       />
-//       <Button title="Sign Up" onPress={signUp} />
-//     </View>
-//   );
-// };
-
-// const styles = StyleSheet.create({
-//   container: { flex: 1, justifyContent: 'center', padding: 20 },
-//   input: { borderWidth: 1, padding: 10, marginVertical: 10, borderRadius: 5 },
-// });
-
-// export default Signup;

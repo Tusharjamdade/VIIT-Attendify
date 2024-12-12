@@ -1,22 +1,43 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, ImageBackground, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
-import Card from '@/components/card';
+import { View, Text, Image, ScrollView, ActivityIndicator, TouchableOpacity, Dimensions, RefreshControl } from 'react-native';
 import { router } from 'expo-router';
-import { auth, firestore } from '../../src/firebase';
+import { auth, firestore } from '@/src/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Feather } from '@expo/vector-icons';
+
+const { width } = Dimensions.get('window');
+const cardWidth = (width - 75) / 2; // 48 = padding (16 * 2) + gap between cards (16)
+
+const Card = ({ title, icon, onPress }) => (
+  <TouchableOpacity 
+    className="bg-blue-100 rounded-2xl shadow-md flex items-center justify-center mb-4"
+    style={{ width: cardWidth, height: cardWidth }}
+    onPress={onPress}
+  >
+    <Feather name={icon} size={36} color="#3B82F6" />
+    <Text className="text-blue-600 font-bold mt-2 text-center text-lg">{title}</Text>
+  </TouchableOpacity>
+);
 
 const Home = () => {
-  const [currentUser, setCurrentUser] = useState(null); // To store user details
-  const [loading, setLoading] = useState(true); // To manage loading state
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);  // State to track pull-to-refresh
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchCurrentUserDetails();
+    setRefreshing(false);
+  };
 
   const fetchCurrentUserDetails = async () => {
     try {
       const user = auth.currentUser;
       if (user) {
-        const userDoc = await getDoc(doc(firestore, 'users', user.uid)); // Fetch user document from Firestore
+        const userDoc = await getDoc(doc(firestore, 'users', user.uid));
         if (userDoc.exists()) {
-          setCurrentUser(userDoc.data()); // Update state with user details
+          setCurrentUser(userDoc.data());
         } else {
           console.log('User document does not exist');
         }
@@ -24,197 +45,106 @@ const Home = () => {
     } catch (error) {
       console.error('Error fetching user details:', error);
     } finally {
-      setLoading(false); // Stop loading spinner
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchCurrentUserDetails(); // Fetch user details on component mount
+    fetchCurrentUserDetails();
   }, []);
 
   if (loading) {
-    // Show loading spinner while fetching data
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#003366" />
+      <View className="flex-1 justify-center items-center bg-white">
+        <ActivityIndicator size="large" color="#3B82F6" />
       </View>
     );
   }
 
   if (!currentUser) {
-    // Show error message if user details could not be fetched
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ fontSize: 18, color: 'red' }}>Failed to load user details</Text>
+      <View className="flex-1 justify-center items-center bg-white">
+        <Text className="text-lg text-blue-500">Failed to load user details</Text>
       </View>
     );
   }
 
+  const cards = [
+    { title: "Attendance", icon: "user-check", path: "/attendance" },
+    { title: "Schedule", icon: "calendar", path: "/" },
+    { title: "Support", icon: "help-circle", path: "/support" },
+    { title: "Add Lecture", icon: "plus-circle", path: "/postlecture" },
+    { title: "Face Recog.", icon: "camera", path: "/facerec" },
+    { title: "Download", icon: "download", path: "/downloadattendance" },
+    { title: "Profile", icon: "user", path: "/profile" },
+    { title: "Settings", icon: "settings", path: "/settings" },
+    { title: "Logout", icon: "log-out", path: "/logout" },
+    { title: "Help", icon: "help-circle", path: "/faq" },
+    { title: "Notifications", icon: "bell", path: "/notifications" },
+    { title: "Messages", icon: "message-square", path: "/messages" },
+  ];
+
+  const imageMap = {
+    'boy1': require('@/assets/images/boy1.jpg'),
+    'boy2': require('@/assets/images/boy2.jpg'),
+    'boy3': require('@/assets/images/boy3.jpg'),
+    'girl1': require('@/assets/images/girl1.jpg'),
+    'girl2': require('@/assets/images/girl2.jpg'),
+    'girl3': require('@/assets/images/girl3.jpg'),
+    // Add more mappings as needed
+  };
+  
+  const imageUrl = currentUser.image ? imageMap[currentUser.image] : null;
+  
   return (
-    <SafeAreaView className="flex-1 bg-gray-100">
-    <ImageBackground source={{ uri: '' }} className="flex-1 bg-white">
-      <ScrollView className="flex-1">
+    <SafeAreaView className="flex-1 bg-blue-50">
+      <ScrollView 
+        className="flex-1" 
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh} 
+            tintColor="#3B82F6" // Color for the pull-to-refresh spinner
+          />
+        }
+      >
         {/* Profile Section */}
-        <View style={styles.profileSection}>
-          <View style={styles.profileHeader}>
+        <View style={{ backgroundColor: '#fff', padding: 16, paddingTop: 10 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
             <Image
-              source={{
-                uri: currentUser.profileImage || 'https://randomuser.me/api/portraits/women/44.jpg',
-              }}
-              style={styles.avatar}
+              source={imageUrl || { uri: "https://images.app.goo.gl/3ugxQh9jgVZEshzf8" }}
+              style={{ width: 80, height: 80, borderRadius: 40 }}
             />
-            <View>
-              <Text style={styles.profileName}>
+            <View style={{ marginLeft: 16 }}>
+              <Text style={{ fontSize: 20, fontWeight: 'bold' }}>
                 {currentUser.firstName} {currentUser.lastName}
               </Text>
-              <Text style={styles.profileRole}>{currentUser.email}</Text>
+              <Text style={{ fontSize: 16, color: '#666' }}>Computer Science Student</Text>
             </View>
           </View>
-          <View style={styles.welcomeSection}>
-            <Text style={styles.welcomeTitle}>Hi, {currentUser.firstName}({currentUser.role})</Text>
-            <Text style={styles.welcomeSubtitle}>Welcome to your Class</Text>
-          </View>
-          {/* <View style={styles.bioContainer}>
-            <Text style={styles.bioTitle}>Student Bio</Text>
-            <Text style={styles.bioDescription}>{currentUser.role}</Text>
-          </View> */}
+          <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 8 }}>
+            Hi, {currentUser.firstName}
+          </Text>
+          <Text style={{ fontSize: 16, color: '#666' }}>Welcome to your class</Text>
         </View>
 
         {/* Dashboard Section */}
-        <View style={styles.dashboardSection}>
-          <Text style={styles.dashboardTitle}>My Dashboard</Text>
-          <View style={styles.cardContainer}>
-            <Card
-              title="Attendance"
-              icon="user-check"
-              color="bg-blue-500"
-              onPress={() => {
-                router.push({ pathname: '/attendance' });
-              }}
-            />
-            <Card
-              title="Today's Schedule"
-              icon="book-open"
-              color="bg-blue-400"
-              onPress={() => {
-                router.push({ pathname: '/' });
-              }}
-            />
-            <Card
-              title="Support"
-              icon="help-circle"
-              color="bg-blue-300"
-              onPress={() => {
-                router.push({ pathname: '/support' });
-              }}
-            />
-            <Card
-              title="Add Lecture"
-              icon="help-circle"
-              color="bg-blue-300"
-              onPress={() => {
-                router.push({ pathname: '/postlecture' });
-              }}
-            />
-            <Card
-              title="Face Recognition"
-              icon="help-circle"
-              color="bg-blue-300"
-              onPress={() => {
-                router.push({ pathname: '/facerec' });
-              }}
-            />
-            <Card
-              title="Download Attendance"
-              icon="help-circle"
-              color="bg-blue-300"
-              onPress={() => {
-                router.push({ pathname: '/downloadattendance' });
-              }}
-            />
+        <View className="px-4 mt-5">
+          <Text className="text-2xl font-bold text-blue-800 mb-4">My Dashboard</Text>
+          <View className="flex-row flex-wrap justify-around">
+            {cards.map((card, index) => (
+              <Card
+                key={index}
+                title={card.title}
+                icon={card.icon}
+                onPress={() => router.push({ pathname: card.path })}
+              />
+            ))}
           </View>
         </View>
       </ScrollView>
-    </ImageBackground>
     </SafeAreaView>
   );
 };
 
 export default Home;
-
-const styles = StyleSheet.create({
-  profileSection: {
-    backgroundColor: '#003366', // Deep Blue
-    padding: 24,
-    paddingBottom: 16,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-  },
-  profileHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    borderWidth: 3,
-    borderColor: '#FFFFFF',
-    marginRight: 16,
-  },
-  profileName: {
-    fontSize: 24,
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-  },
-  profileRole: {
-    fontSize: 14,
-    color: '#B3E5FC', // Light Blue
-  },
-  welcomeSection: {
-    marginBottom: 16,
-  },
-  welcomeTitle: {
-    fontSize: 28,
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-  },
-  welcomeSubtitle: {
-    fontSize: 18,
-    color: '#B3E5FC', // Light Blue
-  },
-  bioContainer: {
-    backgroundColor: '#004080', // Medium Blue
-    padding: 16,
-    borderRadius: 12,
-  },
-  bioTitle: {
-    fontSize: 18,
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  bioDescription: {
-    fontSize: 14,
-    color: '#E3F2FD', // Very Light Blue
-  },
-  dashboardSection: {
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    marginTop: -20,
-  },
-  dashboardTitle: {
-    fontSize: 20,
-    color: '#003366',
-    fontWeight: 'bold',
-    marginBottom: 12,
-  },
-  cardContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-});

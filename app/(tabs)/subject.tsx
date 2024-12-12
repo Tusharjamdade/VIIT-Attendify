@@ -149,7 +149,7 @@ const Subject = () => {
         <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
       }
     >
-      <View style={{ backgroundColor: '#fff', padding: 16, paddingTop: 40 }}>
+      <View style={{ backgroundColor: '#fff', padding: 16, paddingTop: 10 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
           <Image
             source={{ uri: 'https://randomuser.me/api/portraits/women/44.jpg' }}

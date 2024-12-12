@@ -15,6 +15,7 @@
       "CAMERA",
       "RECORD_AUDIO"
     ],
+    
     "android": {
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
@@ -57,6 +58,7 @@
       "router": {
         "origin": false
       },
+       "googleClientId": "353400889247-tuiqecf1a8lep66tr6tc3ekjdma540i3.apps.googleusercontent.com",
       "eas": {
         "projectId": "3340dfae-54a3-46fd-a267-37ea36dce8b1"
       }
