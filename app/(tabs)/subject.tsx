@@ -11,42 +11,22 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { auth, firestore } from '../../src/firebase';
-import { deleteDoc, doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { firestore } from '../../src/firebase';
+import { deleteDoc, doc, collection, query, where, getDocs } from 'firebase/firestore';
 import { deleteUser, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+import useUserDetails from '@/hooks/useUserDetails';
 
 const Subject = () => {
   const router = useRouter();
-  const [currentUser, setCurrentUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false); // For pull-to-refresh
+  const { currentUser, loading: userLoading, error, refetch } = useUserDetails();
   const [lectures, setLectures] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const fetchCurrentUserDetails = async () => {
-    try {
-      const user = auth.currentUser;
-      if (user) {
-        const userDoc = await getDoc(doc(firestore, 'users', user.uid));
-        if (userDoc.exists()) {
-          setCurrentUser(userDoc.data());
-        } else {
-          console.log('User document does not exist');
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching user details:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const fetchLectures = async () => {
-    setLoading(true);
     try {
       const today = new Date();
       const formattedDate = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-      console.log(formattedDate);
       const lecturesRef = collection(firestore, 'lectures');
       const q = query(lecturesRef, where('lectureDate', '==', formattedDate));
       const querySnapshot = await getDocs(q);
@@ -58,20 +38,17 @@ const Subject = () => {
       setLectures(fetchedLectures);
     } catch (error) {
       console.error('Error fetching lectures:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await fetchCurrentUserDetails();
+    await refetch(); // Refetch user details using the hook
     await fetchLectures();
     setRefreshing(false);
   };
 
   useEffect(() => {
-    fetchCurrentUserDetails();
     fetchLectures();
   }, []);
 
@@ -83,13 +60,10 @@ const Subject = () => {
   };
 
   const handleDeleteUser = async () => {
-    if (!auth.currentUser) {
+    if (!currentUser) {
       Alert.alert('Error', 'No user is logged in.');
       return;
     }
-
-    const user = auth.currentUser;
-    const userUid = user.uid;
 
     Alert.alert(
       'Delete Account',
@@ -102,15 +76,18 @@ const Subject = () => {
           onPress: async () => {
             setIsDeleting(true);
             try {
-              const credential = EmailAuthProvider.credential(user.email, 'YourPassword'); // Replace with a password prompt
-              await reauthenticateWithCredential(user, credential);
+              const credential = EmailAuthProvider.credential(
+                currentUser.email,
+                'YourPassword' // Replace with a password prompt
+              );
+              await reauthenticateWithCredential(auth.currentUser, credential);
 
               // Delete Firestore document
-              const userDocRef = doc(firestore, 'users', userUid);
+              const userDocRef = doc(firestore, 'users', currentUser.uid);
               await deleteDoc(userDocRef);
 
               // Delete user from Firebase Authentication
-              await deleteUser(user);
+              await deleteUser(auth.currentUser);
 
               Alert.alert('Account Deleted', 'Your account has been deleted successfully.');
               router.replace('/');
@@ -126,7 +103,7 @@ const Subject = () => {
     );
   };
 
-  if (loading) {
+  if (userLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#003366" />
@@ -134,13 +111,29 @@ const Subject = () => {
     );
   }
 
-  if (!currentUser) {
+  if (error) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text style={{ fontSize: 18, color: 'red' }}>Failed to load user details</Text>
+        <Text style={{ fontSize: 18, color: 'red' }}>Error: {error.message}</Text>
       </View>
     );
   }
+
+  const imageMap = {
+    boy1: require('@/assets/images/boy1.jpg'),
+    boy2: require('@/assets/images/boy2.jpg'),
+    boy3: require('@/assets/images/boy3.jpg'),
+    boy4: require('@/assets/images/boy4.png'),
+    boy5: require('@/assets/images/boy5.jpg'),
+    girl1: require('@/assets/images/girl1.jpg'),
+    girl2: require('@/assets/images/girl2.jpg'),
+    girl3: require('@/assets/images/girl3.jpg'),
+    girl4: require('@/assets/images/girl4.jpg'),
+    girl5: require('@/assets/images/girl5.jpg'),
+    // Add more mappings as needed
+  };
+
+  const imageUrl = currentUser.image ? imageMap[currentUser.image] : null;
 
   return (
     <ScrollView
@@ -152,14 +145,14 @@ const Subject = () => {
       <View style={{ backgroundColor: '#fff', padding: 16, paddingTop: 10 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
           <Image
-            source={{ uri: 'https://randomuser.me/api/portraits/women/44.jpg' }}
+            source={imageUrl || require('@/assets/images/default.jpg')}
             style={{ width: 80, height: 80, borderRadius: 40 }}
           />
           <View style={{ marginLeft: 16 }}>
             <Text style={{ fontSize: 20, fontWeight: 'bold' }}>
               {currentUser.firstName} {currentUser.lastName}
             </Text>
-            <Text style={{ fontSize: 16, color: '#666' }}>Computer Science Student</Text>
+            <Text style={{ fontSize: 16, color: '#666' }}>{currentUser.email}</Text>
           </View>
         </View>
         <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 8 }}>

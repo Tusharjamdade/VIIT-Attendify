@@ -1,16 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { View, Text, Image, ScrollView, ActivityIndicator, TouchableOpacity, Dimensions, RefreshControl } from 'react-native';
 import { router } from 'expo-router';
-import { auth, firestore } from '@/src/firebase';
-import { doc, getDoc } from 'firebase/firestore';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Feather } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';// Adjust the path as needed
+import useUserDetails from '@/hooks/useUserDetails';
 
 const { width } = Dimensions.get('window');
-const cardWidth = (width - 75) / 2; // 48 = padding (16 * 2) + gap between cards (16)
+const cardWidth = (width - 75) / 2;
 
 const Card = ({ title, icon, onPress }) => (
-  <TouchableOpacity 
+  <TouchableOpacity
     className="bg-blue-100 rounded-2xl shadow-md flex items-center justify-center mb-4"
     style={{ width: cardWidth, height: cardWidth }}
     onPress={onPress}
@@ -21,37 +20,14 @@ const Card = ({ title, icon, onPress }) => (
 );
 
 const Home = () => {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);  // State to track pull-to-refresh
+  const { currentUser, loading, error, refetch } = useUserDetails();
+  const [refreshing, setRefreshing] = React.useState(false);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchCurrentUserDetails();
+    await refetch();
     setRefreshing(false);
   };
-
-  const fetchCurrentUserDetails = async () => {
-    try {
-      const user = auth.currentUser;
-      if (user) {
-        const userDoc = await getDoc(doc(firestore, 'users', user.uid));
-        if (userDoc.exists()) {
-          setCurrentUser(userDoc.data());
-        } else {
-          console.log('User document does not exist');
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching user details:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchCurrentUserDetails();
-  }, []);
 
   if (loading) {
     return (
@@ -61,7 +37,7 @@ const Home = () => {
     );
   }
 
-  if (!currentUser) {
+  if (error || !currentUser) {
     return (
       <View className="flex-1 justify-center items-center bg-white">
         <Text className="text-lg text-blue-500">Failed to load user details</Text>
@@ -76,7 +52,7 @@ const Home = () => {
     { title: "Add Lecture", icon: "plus-circle", path: "/postlecture" },
     { title: "Face Recog.", icon: "camera", path: "/facerec" },
     { title: "Download", icon: "download", path: "/downloadattendance" },
-    { title: "Profile", icon: "user", path: "/profile" },
+    { title: "Users", icon: "user", path: "/users" },
     { title: "Settings", icon: "settings", path: "/settings" },
     { title: "Logout", icon: "log-out", path: "/logout" },
     { title: "Help", icon: "help-circle", path: "/faq" },
@@ -85,26 +61,29 @@ const Home = () => {
   ];
 
   const imageMap = {
-    'boy1': require('@/assets/images/boy1.jpg'),
-    'boy2': require('@/assets/images/boy2.jpg'),
-    'boy3': require('@/assets/images/boy3.jpg'),
-    'girl1': require('@/assets/images/girl1.jpg'),
-    'girl2': require('@/assets/images/girl2.jpg'),
-    'girl3': require('@/assets/images/girl3.jpg'),
-    // Add more mappings as needed
+    boy1: require('@/assets/images/boy1.jpg'),
+    boy2: require('@/assets/images/boy2.jpg'),
+    boy3: require('@/assets/images/boy3.jpg'),
+    boy4: require('@/assets/images/boy4.png'),
+    boy5: require('@/assets/images/boy5.jpg'),
+    girl1: require('@/assets/images/girl1.jpg'),
+    girl2: require('@/assets/images/girl2.jpg'),
+    girl3: require('@/assets/images/girl3.jpg'),
+    girl4: require('@/assets/images/girl4.jpg'),
+    girl5: require('@/assets/images/girl5.jpg'),
   };
-  
+
   const imageUrl = currentUser.image ? imageMap[currentUser.image] : null;
-  
+
   return (
-    <SafeAreaView className="flex-1 bg-blue-50">
-      <ScrollView 
-        className="flex-1" 
+    <SafeAreaView className="flex-1 bg-gray">
+      <ScrollView
+        className="flex-1"
         refreshControl={
-          <RefreshControl 
-            refreshing={refreshing} 
-            onRefresh={onRefresh} 
-            tintColor="#3B82F6" // Color for the pull-to-refresh spinner
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#3B82F6"
           />
         }
       >
@@ -112,14 +91,14 @@ const Home = () => {
         <View style={{ backgroundColor: '#fff', padding: 16, paddingTop: 10 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
             <Image
-              source={imageUrl || { uri: "https://images.app.goo.gl/3ugxQh9jgVZEshzf8" }}
+              source={imageUrl || require('@/assets/images/default.jpg')}
               style={{ width: 80, height: 80, borderRadius: 40 }}
             />
             <View style={{ marginLeft: 16 }}>
               <Text style={{ fontSize: 20, fontWeight: 'bold' }}>
                 {currentUser.firstName} {currentUser.lastName}
               </Text>
-              <Text style={{ fontSize: 16, color: '#666' }}>Computer Science Student</Text>
+              <Text style={{ fontSize: 16, color: '#666' }}>{currentUser.email}</Text>
             </View>
           </View>
           <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 8 }}>

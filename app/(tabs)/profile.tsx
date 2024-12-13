@@ -8,82 +8,64 @@ import {
   ScrollView,
   Switch,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { auth, firestore } from '@/src/firebase';
+import { updateDoc, doc } from 'firebase/firestore';
+import { firestore } from '@/src/firebase';
+import useUserDetails from '@/hooks/useUserDetails';
 
 const Profile = () => {
+  const { currentUser, loading: userLoading, error } = useUserDetails();
   const [darkMode, setDarkMode] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(0);
-  const [firstName, setFirstName] = useState('John');
-  const [lastName, setLastName] = useState('Doe');
-  const [email, setEmail] = useState('john.doe@example.com');
-  const [rollNo, setRollNo] = useState('CS2023001');
-  const [className, setClassName] = useState('Computer Science - Year 2');
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [rollNo, setRollNo] = useState('');
   const [imageChanged, setImageChanged] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchCurrentUserDetails = async () => {
-      try {
-        const user = auth.currentUser;
-        if (user) {
-          const userDoc = await getDoc(doc(firestore, 'users', user.uid));
-          if (userDoc.exists()) {
-            setCurrentUser(userDoc.data());
-            setFirstName(userDoc.data().firstName);
-            setLastName(userDoc.data().lastName);
-            setEmail(userDoc.data().email);
-            setRollNo(userDoc.data().rollNo);
-            setClassName(userDoc.data().className);
-          } else {
-            console.log('User document does not exist');
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching user details:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCurrentUserDetails();
-  }, []);
+  const [refreshing, setRefreshing] = useState(false);
 
   const profileImages = [
     { name: 'boy1', source: require('@/assets/images/boy1.jpg') },
     { name: 'boy2', source: require('@/assets/images/boy2.jpg') },
     { name: 'boy3', source: require('@/assets/images/boy3.jpg') },
+    { name: 'boy4', source: require('@/assets/images/boy4.png') },
+    { name: 'boy5', source: require('@/assets/images/boy5.jpg') },
     { name: 'girl1', source: require('@/assets/images/girl1.jpg') },
     { name: 'girl2', source: require('@/assets/images/girl2.jpg') },
     { name: 'girl3', source: require('@/assets/images/girl3.jpg') },
+    { name: 'girl4', source: require('@/assets/images/girl4.jpg') },
+    { name: 'girl5', source: require('@/assets/images/girl5.jpg') },
   ];
 
-  const toggleDarkMode = () => {
-    setDarkMode((prevMode) => !prevMode);
+  useEffect(() => {
+    if (currentUser) {
+      setRollNo(currentUser.rollNo || '');
+      const imageName = currentUser.image || null;
+      if (imageName) {
+        const index = profileImages.findIndex((img) => img.name === imageName);
+        if (index !== -1) setSelectedImage(index);
+      }
+    }
+  }, [currentUser]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    // Re-fetch user details using the hook logic
+    setRefreshing(false);
   };
+
+  const toggleDarkMode = () => setDarkMode((prev) => !prev);
 
   const selectImage = (index) => {
     setSelectedImage(index);
     setImageChanged(true);
   };
 
-  // Save changes (store image name in Firestore)
   const saveChanges = async () => {
     try {
-      const user = auth.currentUser;
-      if (user) {
-        // Get the selected image name
+      if (currentUser && selectedImage !== null) {
         const selectedImageName = profileImages[selectedImage].name;
-
-        // Update user data in Firestore
-        const userRef = doc(firestore, 'users', user.uid);
-        await updateDoc(userRef, {
-          image: selectedImageName,  // Store the selected image name in Firestore
-        });
-
+        const userRef = doc(firestore, 'users', currentUser.uid);
+        await updateDoc(userRef, { image: selectedImageName });
         setImageChanged(false);
         Alert.alert('Success', 'Changes saved successfully!');
       }
@@ -99,9 +81,30 @@ const Profile = () => {
   const buttonBgColor = darkMode ? '#4A5568' : '#E2E8F0';
   const buttonTextColor = darkMode ? '#E2E8F0' : '#2D3748';
 
+  if (userLoading) {
+    return (
+      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: bgColor }}>
+        <Text style={{ color: textColor }}>Loading...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: bgColor }}>
+        <Text style={{ color: 'red' }}>Error: {error.message}</Text>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
-      <ScrollView style={{ flex: 1, padding: 16 }}>
+      <ScrollView
+        style={{ flex: 1, padding: 16 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 24 }}>
           <Text style={{ fontSize: 24, fontWeight: 'bold', color: textColor }}>Profile</Text>
           <Switch
@@ -114,7 +117,11 @@ const Profile = () => {
 
         <View style={{ alignItems: 'center', marginBottom: 24 }}>
           <Image
-            source={profileImages[selectedImage].source}
+            source={
+              selectedImage !== null
+                ? profileImages[selectedImage].source
+                : require('@/assets/images/boy1.jpg') // Fallback image
+            }
             style={{ width: 120, height: 120, borderRadius: 60 }}
           />
         </View>
@@ -156,77 +163,29 @@ const Profile = () => {
           </TouchableOpacity>
         )}
 
-        <View style={{ marginBottom: 24 }}>
-          <Text style={{ color: textColor, marginBottom: 8 }}>First Name</Text>
-          <TextInput
-            value={firstName}
-            // onChangeText={setFirstName}
-            editable={false}
-            style={{
-              backgroundColor: inputBgColor,
-              color: textColor,
-              padding: 12,
-              borderRadius: 8,
-            }}
-          />
-        </View>
-
-        <View style={{ marginBottom: 24 }}>
-          <Text style={{ color: textColor, marginBottom: 8 }}>Last Name</Text>
-          <TextInput
-            value={lastName}
-            editable={false}
-            style={{
-              backgroundColor: inputBgColor,
-              color: textColor,
-              padding: 12,
-              borderRadius: 8,
-            }}
-          />
-        </View>
-
-        <View style={{ marginBottom: 24 }}>
-          <Text style={{ color: textColor, marginBottom: 8 }}>Email</Text>
-          <TextInput
-            value={email}
-            editable={false}
-            keyboardType="email-address"
-            style={{
-              backgroundColor: inputBgColor,
-              color: textColor,
-              padding: 12,
-              borderRadius: 8,
-            }}
-          />
-        </View>
-
-        <View style={{ marginBottom: 24 }}>
-          <Text style={{ color: textColor, marginBottom: 8 }}>Roll Number</Text>
-          <TextInput
-            value={rollNo}
-            onChangeText={setRollNo}
-            style={{
-              backgroundColor: inputBgColor,
-              color: textColor,
-              padding: 12,
-              borderRadius: 8,
-            }}
-          />
-        </View>
-
-        <View style={{ marginBottom: 24 }}>
-          <Text style={{ color: textColor, marginBottom: 8 }}>Class</Text>
-          <TextInput
-            value={className}
-            editable={false}
-            style={{
-              backgroundColor: inputBgColor,
-              color: textColor,
-              padding: 12,
-              borderRadius: 8,
-            }}
-          />
-        </View>
+        {/* Display form fields */}
+        {currentUser && [
+          { label: 'First Name', value: currentUser.firstName, editable: false },
+          { label: 'Last Name', value: currentUser.lastName, editable: false },
+          { label: 'Email', value: currentUser.email, editable: false },
+          { label: 'Roll Number', value: rollNo, editable: true },
+          { label: 'Class', value: currentUser.className, editable: false },
+        ].map(({ label, value, editable }, index) => (
+          <View style={{ marginBottom: 24 }} key={index}>
+            <Text style={{ color: textColor, marginBottom: 8 }}>{label}</Text>
+            <TextInput
+              value={value}
+              onChangeText={editable ? setRollNo : undefined}
+              editable={editable}
+              style={{
+                backgroundColor: inputBgColor,
+                color: textColor,
+                padding: 12,
+                borderRadius: 8,
+              }}
+            />
+          </View>
+        ))}
       </ScrollView>
     </SafeAreaView>
   );
