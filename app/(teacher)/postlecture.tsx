@@ -259,7 +259,7 @@ import {
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { auth, firestore } from '../../src/firebase'; // Ensure the correct Firebase file path
-import { doc, getDoc, collection, addDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 import 'nativewind';
 
 const subjects = ['Mathematics', 'Science', 'History', 'Literature', 'Physics', 'Chemistry', 'Biology'];
@@ -347,7 +347,7 @@ export default function PostLecturePage() {
       const user = auth.currentUser;
       if (user) {
         const lecturesRef = collection(firestore, 'lectures');
-        await addDoc(lecturesRef, {
+        const lectureDocRef = await addDoc(lecturesRef, {
           userId: user.uid,
           subject,
           startTime: formatTime(startTime),
@@ -356,6 +356,29 @@ export default function PostLecturePage() {
           location,
           teacherName,
         });
+        const q = query(
+          collection(firestore, 'users'),
+          where('role', '==', 'student'),
+          // orderBy('rollNo', 'asc') // Ensure rollNo field exists and is indexed
+        );
+        
+        const usersSnapshot = await getDocs(q);
+        const students = usersSnapshot.docs.map((doc) => {
+          const {uid, rollNo, firstName, lastName } = doc.data();
+          return {
+            uid,
+            rollNo,
+            firstName,
+            lastName,
+            present: false, // Default to false
+          };
+        });
+        const attendanceRef = collection(firestore, 'attendance');
+                await addDoc(attendanceRef, {
+                  lectureId: lectureDocRef.id, // Reference to the lecture
+                  students, // Array of students
+                });
+                console.log(usersSnapshot)
         Alert.alert('Success', 'Lecture details successfully posted!');
         setLocation('');
       } else {

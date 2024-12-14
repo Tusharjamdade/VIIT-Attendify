@@ -1,84 +1,147 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+  Button,
+} from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { firestore } from '@/src/firebase';
+import useUserDetails from '@/hooks/useUserDetails';
 
 interface Student {
   id: string;
-  rollNumber: string;
-  name: string;
-  isPresent: boolean;
+  rollNo: number;
+  firstName: string;
+  lastName: string;
+  present: boolean;
 }
 
-export default function StudentList({lecture}) {
+interface Lecture {
+  id: string;
+}
+
+export default function StudentList({ lecture }: { lecture: Lecture }) {
   const [students, setStudents] = useState<Student[]>([]);
+  const [loadingg, setLoading] = useState(true);
+  const { currentUser } = useUserDetails();
 
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        // Query Firestore for users with the role 'student', ordered by roll number
-        const q = query(
-          collection(firestore, 'users'),
-          where('role', '==', 'student'),
-          // orderBy('rollNo', 'asc') // Ensure rollNo field exists and is indexed
+        const attendanceQuery = query(
+          collection(firestore, 'attendance'),
+          where('lectureId', '==', lecture.id)
         );
 
-        const usersSnapshot = await getDocs(q);
+        const attendanceSnapshot = await getDocs(attendanceQuery);
 
-        const studentsData: Student[] = usersSnapshot.docs
-  .map((doc) => {
-    const data = doc.data();
-    return {
-      id: doc.id,
-      rollNumber: `00${data.rollNo}`.slice(-3), // Format roll number as 001, 002, etc.
-      name: `${data.firstName} ${data.lastName}`,
-      isPresent: false, // Default attendance status
-    };
-  })
-  .sort((a, b) => a.rollNumber.localeCompare(b.rollNumber));
+        const studentsData: Student[] = attendanceSnapshot.docs
+          .flatMap((doc) => {
+            const data = doc.data();
+            if (Array.isArray(data.students)) {
+              return data.students.map((student: any) => ({
+                id: `${doc.id}-${student.rollNo}`,
+                rollNo: student.rollNo,
+                firstName: student.firstName,
+                lastName: student.lastName,
+                present: student.present,
+              }));
+            }
+            return [];
+          })
+          .sort((a, b) => a.rollNo - b.rollNo);
 
         setStudents(studentsData);
       } catch (error) {
         console.error('Error fetching students:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchStudents();
-  }, []);
+  }, [lecture.id]);
 
   const toggleAttendance = (id: string) => {
-    setStudents((prevStudents) =>
-      prevStudents.map((student) =>
-        student.id === id ? { ...student, isPresent: !student.isPresent } : student
-      )
-    );
+    if (currentUser.role === 'faculty' || currentUser.role === 'admin') {
+      setStudents((prevStudents) =>
+        prevStudents.map((student) =>
+          student.id === id ? { ...student, present: !student.present } : student
+        )
+      );
+    }
+  };
+
+  const updateAttendance = async () => {
+    try {
+      const attendanceQuery = query(
+        collection(firestore, 'attendance'),
+        where('lectureId', '==', lecture.id)
+      );
+      const attendanceSnapshot = await getDocs(attendanceQuery);
+
+      if (!attendanceSnapshot.empty) {
+        const attendanceDoc = attendanceSnapshot.docs[0].ref; // Get the reference to the matching document
+
+        const updatedStudents = students.map(({ id, ...rest }) => rest); // Remove unique ID
+        await updateDoc(attendanceDoc, { students: updatedStudents });
+        alert('Attendance updated successfully!');
+      } else {
+        alert('No matching attendance document found.');
+      }
+    } catch (error) {
+      console.error('Error updating attendance:', error);
+      alert('Failed to update attendance.');
+    }
   };
 
   const renderItem = ({ item }: { item: Student }) => (
-    <TouchableOpacity onPress={() => toggleAttendance(item.id)} style={styles.studentItem}>
+    <TouchableOpacity
+      onPress={() => toggleAttendance(item.id)}
+      style={styles.studentItem}
+      disabled={currentUser.role === 'student'} // Disable toggle for students
+    >
       <View style={styles.studentInfo}>
-        {/* <Text>{JSON.stringify(lecture)}</Text> */}
-        <Text style={styles.rollNumber}>{item.rollNumber}</Text>
-        <Text style={styles.studentName}>{item.name}</Text>
+        <Text style={styles.rollNumber}>{String(item.rollNo).padStart(3, '0')}</Text>
+        <Text style={styles.studentName}>{`${item.firstName} ${item.lastName}`}</Text>
       </View>
       <Feather
-        name={item.isPresent ? 'check-circle' : 'circle'}
+        name={item.present ? 'check-circle' : 'x-circle'}
         size={24}
-        color={item.isPresent ? '#4CAF50' : '#F44336'}
+        color={item.present ? '#4CAF50' : '#F44336'}
       />
     </TouchableOpacity>
   );
 
+  if (loadingg) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Student List</Text>
-      <FlatList
-        data={students}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-      />
+      {students.length > 0 ? (
+        <FlatList
+          data={students}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
+        />
+      ) : (
+        <Text style={styles.noStudentsText}>No students found for this lecture.</Text>
+      )}
+      {(currentUser.role === 'faculty' || currentUser.role === 'admin') && (
+        <Button title="Update Attendance" onPress={updateAttendance} color="#007AFF" />
+      )}
     </View>
   );
 }
@@ -123,5 +186,16 @@ const styles = StyleSheet.create({
   },
   studentName: {
     fontSize: 16,
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noStudentsText: {
+    fontSize: 16,
+    color: '#555',
+    textAlign: 'center',
+    marginTop: 20,
   },
 });

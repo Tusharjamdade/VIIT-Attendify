@@ -455,6 +455,7 @@ const Subject = () => {
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: 18, fontWeight: 'bold' }}>
                   {lecture.subject}
+                  {/* {JSON.stringify(lecture)} */}
                 </Text>
                 <Text style={{ fontSize: 14, color: '#666' }}>
                   {lecture.startTime} - {lecture.endTime} | {lecture.lectureDate}

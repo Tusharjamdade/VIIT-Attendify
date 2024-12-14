@@ -408,21 +408,16 @@ export default function SubjectAttendance() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <StudentProfile />
-        {/* <View style={styles.card}>
-          <Text style={styles.cardTitle}>Subject Attendance</Text>
-          <TouchableOpacity style={styles.button} onPress={markAttendance} disabled={loading}>
-            <Text style={styles.buttonText}>{loading ? 'Processing...' : 'Mark Attendance'}</Text>
-          </TouchableOpacity>
-        </View> */}
          <SubjectCard
+          subjectId={details.id}
           subjectName={details.subject || 'Unknown Subject'}
           startTime={details.startTime || 'N/A'}
           endTime={details.endTime || 'N/A'}
           date={details.lectureDate || 'N/A'}
           teacherName={details.teacherName || 'Unknown Teacher'}
           location={details.location || 'N/A'}
-          presentCount={10}
-          totalCount={10}
+          // presentCount={10}
+          // totalCount={10}
         /> 
         <StudentList lecture={details} />
       </ScrollView>
