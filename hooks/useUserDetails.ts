@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
+import { useState, useEffect, useCallback } from 'react';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { auth, firestore } from '@/src/firebase';
 
 const useUserDetails = () => {
@@ -7,11 +7,13 @@ const useUserDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchCurrentUserDetails = async () => {
+  const fetchCurrentUserDetails = useCallback(async () => {
+    setLoading(true);
     try {
       const user = auth.currentUser;
       if (user) {
-        const userDoc = await getDoc(doc(firestore, 'users', user.uid));
+        const userDocRef = doc(firestore, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
         if (userDoc.exists()) {
           setCurrentUser(userDoc.data());
         } else {
@@ -24,11 +26,32 @@ const useUserDetails = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (user) {
+      const userDocRef = doc(firestore, 'users', user.uid);
+
+      // Listen for real-time updates to the user's document
+      const unsubscribe = onSnapshot(userDocRef, (snapshot) => {
+        if (snapshot.exists()) {
+          setCurrentUser(snapshot.data());
+        } else {
+          console.error('User document does not exist');
+        }
+      }, (err) => {
+        console.error('Error listening to user document updates:', err);
+        setError(err);
+      });
+
+      return () => unsubscribe();
+    }
+  }, []);
 
   useEffect(() => {
     fetchCurrentUserDetails();
-  }, []);
+  }, [fetchCurrentUserDetails]);
 
   return { currentUser, loading, error, refetch: fetchCurrentUserDetails };
 };

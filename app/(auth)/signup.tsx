@@ -31,6 +31,7 @@ import { doc, setDoc } from 'firebase/firestore';
 const Signup = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [rollNo, setRollNo] = useState("");
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -51,8 +52,12 @@ const Signup = () => {
       Alert.alert('Error', 'Passwords do not match.');
       return;
     }
+    if(role == "student" && rollNo <= 0){
+      Alert.alert('Error', 'Invalid Roll No');
+      return;
+    }
 
-    if (role !== 'student' && !validateRoleCode()) {
+    if (role !== 'student' && !validateRoleCode() ) {
       Alert.alert('Error', 'Invalid code for the selected role.');
       return;
     }
@@ -85,7 +90,9 @@ const Signup = () => {
             lastName,
             email,
             role,
+            password,
             createdAt: new Date(),
+            ...(role === "student" && { rollNo }), // Conditionally add rollNo if role is "student"
           };
           await setDoc(userDocRef, userData);
           Alert.alert('Success', 'Account created successfully after verification!');
@@ -104,7 +111,11 @@ const Signup = () => {
       Alert.alert('Error', error.message);
     }
   };
-
+  const handleRollNoChange = (text) => {
+    // Ensure only numeric characters are accepted
+    const numericValue = text.replace(/[^0-9]/g, ""); // Remove non-numeric characters
+    setRollNo(numericValue);
+  };
   return (
     <ScrollView contentContainerStyle={{ flexGrow: 1 }} className="flex-1 bg-gray-100 p-6">
       <View className="items-center mb-8">
@@ -127,14 +138,15 @@ const Signup = () => {
 
       {/* Last Name */}
       <View className="flex-row items-center w-full h-12 bg-white rounded-lg px-4 mb-4 shadow-md">
-        <IdentificationIcon size={20} color="#6B7280" />
-        <TextInput
-          placeholder="Enter your last name"
-          className="flex-1 ml-2 text-gray-700"
-          value={lastName}
-          onChangeText={setLastName}
-        />
-      </View>
+           <IdentificationIcon size={20} color="#6B7280" />
+           <TextInput
+             placeholder="Enter your last name"
+             className="flex-1 ml-2 text-gray-700"
+             value={lastName}
+             onChangeText={setLastName}
+           />
+         </View>
+      
 
       {/* Email */}
       <View className="flex-row items-center w-full h-12 bg-white rounded-lg px-4 mb-4 shadow-md">
@@ -200,7 +212,19 @@ const Signup = () => {
         </Picker>
       </View>
 
-      {/* Code Input */}
+      {/* Roll No */}
+      {(role == "student" || role == "class_representative") &&(    
+      <View className="flex-row items-center w-full h-12 bg-white rounded-lg px-4 mb-4 shadow-md">
+        <IdentificationIcon size={20} color="#6B7280" />
+        <TextInput
+          keyboardType={"numeric"}
+          placeholder="Enter your roll no"
+          className="flex-1 ml-2 text-gray-700"
+          value={rollNo.toString()}
+          onChangeText={handleRollNoChange}
+        />
+      </View>
+      )}
       {role !== 'student' && (
         <View className="flex-row items-center w-full h-12 bg-white rounded-lg px-4 mb-4 shadow-md">
           <KeyIcon size={20} color="#6B7280" />

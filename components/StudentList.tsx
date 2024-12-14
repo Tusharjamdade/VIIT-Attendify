@@ -1,23 +1,64 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { firestore } from '@/src/firebase';
 
 interface Student {
-  id: number;
+  id: string;
   rollNumber: string;
   name: string;
   isPresent: boolean;
 }
 
-interface StudentListProps {
-  students: Student[];
-  toggleAttendance: (id: number) => void;
-}
+export default function StudentList({lecture}) {
+  const [students, setStudents] = useState<Student[]>([]);
 
-export default function StudentList({ students, toggleAttendance }: StudentListProps) {
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        // Query Firestore for users with the role 'student', ordered by roll number
+        const q = query(
+          collection(firestore, 'users'),
+          where('role', '==', 'student'),
+          // orderBy('rollNo', 'asc') // Ensure rollNo field exists and is indexed
+        );
+
+        const usersSnapshot = await getDocs(q);
+
+        const studentsData: Student[] = usersSnapshot.docs
+  .map((doc) => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      rollNumber: `00${data.rollNo}`.slice(-3), // Format roll number as 001, 002, etc.
+      name: `${data.firstName} ${data.lastName}`,
+      isPresent: false, // Default attendance status
+    };
+  })
+  .sort((a, b) => a.rollNumber.localeCompare(b.rollNumber));
+
+        setStudents(studentsData);
+      } catch (error) {
+        console.error('Error fetching students:', error);
+      }
+    };
+
+    fetchStudents();
+  }, []);
+
+  const toggleAttendance = (id: string) => {
+    setStudents((prevStudents) =>
+      prevStudents.map((student) =>
+        student.id === id ? { ...student, isPresent: !student.isPresent } : student
+      )
+    );
+  };
+
   const renderItem = ({ item }: { item: Student }) => (
     <TouchableOpacity onPress={() => toggleAttendance(item.id)} style={styles.studentItem}>
       <View style={styles.studentInfo}>
+        {/* <Text>{JSON.stringify(lecture)}</Text> */}
         <Text style={styles.rollNumber}>{item.rollNumber}</Text>
         <Text style={styles.studentName}>{item.name}</Text>
       </View>
@@ -35,7 +76,7 @@ export default function StudentList({ students, toggleAttendance }: StudentListP
       <FlatList
         data={students}
         renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
       />
     </View>
@@ -45,6 +86,8 @@ export default function StudentList({ students, toggleAttendance }: StudentListP
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 16,
+    backgroundColor: '#f8f8f8',
   },
   title: {
     fontSize: 20,
@@ -58,7 +101,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: '#fff',
     borderRadius: 8,
     padding: 12,
     marginBottom: 8,
@@ -82,4 +125,3 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
-

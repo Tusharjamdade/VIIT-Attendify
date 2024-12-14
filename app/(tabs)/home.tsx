@@ -73,7 +73,7 @@ const Home = () => {
     girl5: require('@/assets/images/girl5.jpg'),
   };
 
-  const imageUrl = currentUser.image ? imageMap[currentUser.image] : null;
+  const imageUrl = currentUser?.image ? imageMap[currentUser.image] : null;
 
   return (
     <SafeAreaView className="flex-1 bg-gray">
