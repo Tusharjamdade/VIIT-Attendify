@@ -261,6 +261,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { auth, firestore } from '../../src/firebase'; // Ensure the correct Firebase file path
 import { doc, getDoc, collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 import 'nativewind';
+import StudentProfile from '@/components/StudentProfile';
 
 const subjects = ['Mathematics', 'Science', 'History', 'Literature', 'Physics', 'Chemistry', 'Biology'];
 
@@ -339,6 +340,12 @@ export default function PostLecturePage() {
     }
     return true;
   };
+  function formatDate(date: Date): string {
+    const day = String(date.getDate()).padStart(2, '0'); // Ensures two digits
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  }
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
@@ -352,7 +359,7 @@ export default function PostLecturePage() {
           subject,
           startTime: formatTime(startTime),
           endTime: formatTime(endTime),
-          lectureDate: lectureDate.toISOString().split('T')[0],
+          lectureDate: formatDate(lectureDate),
           location,
           teacherName,
         });
@@ -361,6 +368,7 @@ export default function PostLecturePage() {
           where('role', '==', 'student'),
           // orderBy('rollNo', 'asc') // Ensure rollNo field exists and is indexed
         );
+        
         
         const usersSnapshot = await getDocs(q);
         const students = usersSnapshot.docs.map((doc) => {
@@ -376,6 +384,7 @@ export default function PostLecturePage() {
         const attendanceRef = collection(firestore, 'attendance');
                 await addDoc(attendanceRef, {
                   lectureId: lectureDocRef.id, // Reference to the lecture
+                  lectureMonth: new Date().getMonth() +1 ,
                   students, // Array of students
                 });
                 console.log(usersSnapshot)
@@ -405,21 +414,11 @@ export default function PostLecturePage() {
       </View>
     );
   }
-
+  
   return (
     <ScrollView className="flex-1 bg-white p-5">
-      <View className="flex-row items-center mb-4">
-        <Image
-          source={{
-            uri: currentUser.profileImage || 'https://randomuser.me/api/portraits/men/44.jpg',
-          }}
-          className="w-20 h-20 rounded-full border-4 border-white mr-4"
-        />
-        <View>
-          <Text className="text-lg font-bold">{currentUser.firstName} {currentUser.lastName}</Text>
-          <Text className="text-sm text-blue-400">{currentUser.email}</Text>
-        </View>
-      </View>
+      
+               <StudentProfile/>
 
       <Text className="text-2xl font-bold text-blue-600 text-center mb-4">Post Lecture Details</Text>
 

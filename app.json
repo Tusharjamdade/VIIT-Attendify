@@ -15,7 +15,6 @@
       "CAMERA",
       "RECORD_AUDIO"
     ],
-    
     "android": {
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {

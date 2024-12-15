@@ -1,27 +1,41 @@
 import React from 'react';
-import { View, Text, Image, ScrollView, ActivityIndicator, TouchableOpacity, Dimensions, RefreshControl } from 'react-native';
+import { View, Text, Image, ScrollView, ActivityIndicator, TouchableOpacity, Dimensions, RefreshControl, useColorScheme } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Feather } from '@expo/vector-icons';// Adjust the path as needed
+import { Feather } from '@expo/vector-icons'; // Adjust the path as needed
 import useUserDetails from '@/hooks/useUserDetails';
 
 const { width } = Dimensions.get('window');
 const cardWidth = (width - 75) / 2;
 
-const Card = ({ title, icon, onPress }) => (
+const Card = ({ title, icon, onPress, textColor, backgroundColor }) => (
   <TouchableOpacity
-    className="bg-blue-100 rounded-2xl shadow-md flex items-center justify-center mb-4"
-    style={{ width: cardWidth, height: cardWidth }}
+    style={{
+      backgroundColor,
+      borderRadius: 16,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 4,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 16,
+      width: cardWidth,
+      height: cardWidth,
+    }}
     onPress={onPress}
   >
-    <Feather name={icon} size={36} color="#3B82F6" />
-    <Text className="text-blue-600 font-bold mt-2 text-center text-lg">{title}</Text>
+    <Feather name={icon} size={36} color={textColor} />
+    <Text style={{ color: textColor, fontWeight: 'bold', marginTop: 8, textAlign: 'center', fontSize: 16 }}>
+      {title}
+    </Text>
   </TouchableOpacity>
 );
 
 const Home = () => {
   const { currentUser, loading, error, refetch } = useUserDetails();
   const [refreshing, setRefreshing] = React.useState(false);
+  const isDarkMode = useColorScheme() === 'dark';
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -29,18 +43,26 @@ const Home = () => {
     setRefreshing(false);
   };
 
+  const themeColors = {
+    background: isDarkMode ? '#1A202C' : '#F7FAFC',
+    cardBackground: isDarkMode ? '#2D3748' : '#E2E8F0',
+    textPrimary: isDarkMode ? '#E2E8F0' : '#2D3748',
+    textSecondary: isDarkMode ? '#A0AEC0' : '#4A5568',
+    accent: '#3B82F6',
+  };
+
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center bg-white">
-        <ActivityIndicator size="large" color="#3B82F6" />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: themeColors.background }}>
+        <ActivityIndicator size="large" color={themeColors.accent} />
       </View>
     );
   }
 
   if (error || !currentUser) {
     return (
-      <View className="flex-1 justify-center items-center bg-white">
-        <Text className="text-lg text-blue-500">Failed to load user details</Text>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: themeColors.background }}>
+        <Text style={{ color: themeColors.accent, fontSize: 18 }}>Failed to load user details</Text>
       </View>
     );
   }
@@ -76,47 +98,48 @@ const Home = () => {
   const imageUrl = currentUser?.image ? imageMap[currentUser.image] : null;
 
   return (
-    <SafeAreaView className="flex-1 bg-gray">
+    <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.background }}>
       <ScrollView
-        className="flex-1"
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#3B82F6"
+            tintColor={themeColors.accent}
           />
         }
       >
         {/* Profile Section */}
-        <View style={{ backgroundColor: '#fff', padding: 16, paddingTop: 10 }}>
+        <View style={{ backgroundColor: themeColors.cardBackground, padding: 16, paddingTop: 10, borderRadius: 8 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
             <Image
               source={imageUrl || require('@/assets/images/default.jpg')}
               style={{ width: 80, height: 80, borderRadius: 40 }}
             />
             <View style={{ marginLeft: 16 }}>
-              <Text style={{ fontSize: 20, fontWeight: 'bold' }}>
+              <Text style={{ fontSize: 20, fontWeight: 'bold', color: themeColors.textPrimary }}>
                 {currentUser.firstName} {currentUser.lastName}
               </Text>
-              <Text style={{ fontSize: 16, color: '#666' }}>{currentUser.email}</Text>
+              <Text style={{ fontSize: 16, color: themeColors.textSecondary }}>{currentUser.email}</Text>
             </View>
           </View>
-          <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 8 }}>
+          <Text style={{ fontSize: 24, fontWeight: 'bold', color: themeColors.textPrimary, marginBottom: 8 }}>
             Hi, {currentUser.firstName}
           </Text>
-          <Text style={{ fontSize: 16, color: '#666' }}>Welcome to your class</Text>
+          <Text style={{ fontSize: 16, color: themeColors.textSecondary }}>Welcome to your class</Text>
         </View>
 
         {/* Dashboard Section */}
-        <View className="px-4 mt-5">
-          <Text className="text-2xl font-bold text-blue-800 mb-4">My Dashboard</Text>
-          <View className="flex-row flex-wrap justify-around">
+        <View style={{ padding: 16, marginTop: 16 }}>
+          <Text style={{ fontSize: 24, fontWeight: 'bold', color: themeColors.textPrimary, marginBottom: 16 }}>My Dashboard</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
             {cards.map((card, index) => (
               <Card
                 key={index}
                 title={card.title}
                 icon={card.icon}
                 onPress={() => router.push({ pathname: card.path })}
+                textColor={themeColors.accent}
+                backgroundColor={themeColors.cardBackground}
               />
             ))}
           </View>

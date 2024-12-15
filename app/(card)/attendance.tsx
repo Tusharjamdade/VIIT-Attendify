@@ -222,3 +222,139 @@ const styles = StyleSheet.create({
 
 export default AttendanceReport;
 
+// import React from 'react';
+// import { LineChart, PieChart } from '@mui/x-charts';
+// import { Box, Typography, Avatar, Stack } from '@mui/material';
+// import { collection, query, where } from 'firebase/firestore';
+
+// // Mock Firebase Firestore data
+// const attendanceCollection = [
+//   {
+//     lectureId: 1,
+//     lectureMonth: 12,
+//     students: [
+//       { uid: '123', firstName: 'John', lastName: 'Doe', present: true },
+//       { uid: '456', firstName: 'Jane', lastName: 'Smith', present: false },
+//     ],
+//   },
+//   {
+//     lectureId: 2,
+//     lectureMonth: 1,
+//     students: [
+//       { uid: '123', firstName: 'John', lastName: 'Doe', present: false },
+//       { uid: '456', firstName: 'Jane', lastName: 'Smith', present: true },
+//     ],
+//   },
+//   {
+//     lectureId: 3,
+//     lectureMonth: 2,
+//     students: [
+//       { uid: '123', firstName: 'John', lastName: 'Doe', present: true },
+//       { uid: '456', firstName: 'Jane', lastName: 'Smith', present: false },
+//     ],
+//   },
+//   // Add more records as needed
+// ];
+
+// const currentUser = { uid: '123' };
+
+// const getAttendanceData = () => {
+//   const months = [12, 1, 2, 3, 4, 5, 6];
+//   const lecturesPerMonth = {};
+//   const presentsPerMonth = {};
+
+//   months.forEach((month) => {
+//     lecturesPerMonth[month] = 0;
+//     presentsPerMonth[month] = 0;
+//   });
+
+//   attendanceCollection.forEach((lecture) => {
+//     const { lectureMonth, students } = lecture;
+//     const currentUserAttendance = students.find((student) => student.uid === currentUser.uid);
+
+//     if (currentUserAttendance) {
+//       lecturesPerMonth[lectureMonth] = (lecturesPerMonth[lectureMonth] || 0) + 1;
+//       if (currentUserAttendance.present) {
+//         presentsPerMonth[lectureMonth] = (presentsPerMonth[lectureMonth] || 0) + 1;
+//       }
+//     }
+//   });
+
+//   const monthlyLectures = months.map((month) => lecturesPerMonth[month] || 0);
+//   const monthlyPresents = months.map((month) => presentsPerMonth[month] || 0);
+
+//   const totalLectures = monthlyLectures.reduce((a, b) => a + b, 0);
+//   const totalPresents = monthlyPresents.reduce((a, b) => a + b, 0);
+
+//   return { months, monthlyLectures, monthlyPresents, totalLectures, totalPresents };
+// };
+
+// const AttendanceReport = () => {
+//   const { months, monthlyLectures, monthlyPresents, totalLectures, totalPresents } = getAttendanceData();
+
+//   const monthsLabels = ['Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+
+//   return (
+//     <Box p={3}>
+//       {/* Header Section */}
+//       <Stack direction="row" spacing={2} alignItems="center" mb={4}>
+//         <Avatar src="https://randomuser.me/api/portraits/men/44.jpg" alt="John Doe" />
+//         <Box>
+//           <Typography variant="h6">John Doe</Typography>
+//           <Typography variant="body2" color="textSecondary">
+//             johndoe@email.com
+//           </Typography>
+//         </Box>
+//       </Stack>
+
+//       {/* Title */}
+//       <Typography variant="h5" gutterBottom>
+//         Attendance Report
+//       </Typography>
+
+//       {/* Line Chart */}
+//       <Box mb={4}>
+//         <Typography variant="h6" gutterBottom>
+//           Monthly Attendance
+//         </Typography>
+//         <LineChart
+//           dataset={[
+//             { id: 'Total Lectures', data: months.map((month, index) => ({ x: monthsLabels[index], y: monthlyLectures[index] })) },
+//             { id: 'Present Days', data: months.map((month, index) => ({ x: monthsLabels[index], y: monthlyPresents[index] })) },
+//           ]}
+//           xAxis={[{ dataKey: 'x', label: 'Month' }]}
+//           series={[{ dataKey: 'y', label: 'Attendance' }]}
+//           height={300}
+//           margin={{ left: 30, right: 30, top: 30, bottom: 30 }}
+//           grid={{ vertical: true, horizontal: true }}
+//         />
+//       </Box>
+
+//       {/* Circular Chart */}
+//       <Box>
+//         <Typography variant="h6" gutterBottom>
+//           Attendance Percentage
+//         </Typography>
+//         <PieChart
+//           series={[{
+//             id: 'Attendance',
+//             data: [
+//               { id: 'Present', value: totalPresents, color: '#2F80ED' },
+//               { id: 'Absent', value: totalLectures - totalPresents, color: '#E0E0E0' },
+//             ],
+//           }]}
+//           height={300}
+//         />
+//       </Box>
+
+//       {/* Stats Section */}
+//       <Box mt={4}>
+//         <Typography variant="body1">Total Lectures: {totalLectures}</Typography>
+//         <Typography variant="body1">Present Days: {totalPresents}</Typography>
+//         <Typography variant="body1">Absent Days: {totalLectures - totalPresents}</Typography>
+//       </Box>
+//     </Box>
+//   );
+// };
+
+// export default AttendanceReport;

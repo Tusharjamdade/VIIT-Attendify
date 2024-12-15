@@ -1,11 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
   Alert,
-  Button,
   PermissionsAndroid,
   Platform,
-  SafeAreaView,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -48,6 +45,39 @@ export default function SubjectCard({
     latitude: 18.4583825,
     longitude: 73.8767101,
   };
+  const checkAttendance = async (firestore, subjectId, currentUser, setAttendanceMarked) => {
+    try {
+      // Create a query to fetch attendance documents with the matching lectureId
+      const attendanceQuery = query(
+        collection(firestore, 'attendance'),
+        where('lectureId', '==', subjectId)
+      );
+  
+      // Fetch the documents matching the query
+      const querySnapshot = await getDocs(attendanceQuery);
+  
+      // Iterate over the fetched documents
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+  
+        // Check if the students array exists and contains the current user's UID
+        if (data.students) {
+          const studentRecord = data.students.find(
+            (student) => student.uid === currentUser.uid
+          );
+  
+          // Check if the student's "present" field is true
+          if (studentRecord && studentRecord.present) {
+            setAttendanceMarked(true);
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error checking attendance:', error);
+    }
+  };
+  checkAttendance(firestore,subjectId,currentUser,setAttendanceMarked);  
+
 
   const requestLocationPermission = async () => {
     if (Platform.OS === 'android') {
@@ -159,18 +189,17 @@ export default function SubjectCard({
       return;
     }
 
-    const attendanceQuery = query(
-      collection(firestore, 'attendance'),
-      where('lectureId', '==', subjectId)
-    );
-
     try {
+      const attendanceQuery = query(
+        collection(firestore, 'attendance'),
+        where('lectureId', '==', subjectId)
+      );
       const querySnapshot = await getDocs(attendanceQuery);
 
       querySnapshot.forEach(async (docSnapshot) => {
         const attendanceDoc = docSnapshot.data();
         const studentIndex = attendanceDoc.students.findIndex(
-          (student) => student.uid === currentUser.uid && student.present === false
+          (student) => student.uid === currentUser?.uid && !student.present
         );
 
         if (studentIndex !== -1) {
@@ -184,7 +213,6 @@ export default function SubjectCard({
             students: updatedStudents,
           });
 
-          // Update counts
           const present = updatedStudents.filter((student) => student.present).length;
           const total = updatedStudents.length;
           setPresentCount(present);
@@ -223,7 +251,7 @@ export default function SubjectCard({
           setTotalCount(total);
 
           const currentStudent = attendanceDoc.students.find(
-            (student) => student.uid === currentUser.uid
+            (student) => student.uid === currentUser?.uid
           );
           if (currentStudent?.present) {
             setAttendanceMarked(true);
@@ -252,7 +280,7 @@ export default function SubjectCard({
       ) : attendanceMarked ? (
         <Text style={styles.markedText}>Attendance Marked</Text>
       ) : (
-        <TouchableOpacity style={styles.button} onPress={markAttendance}>
+        <TouchableOpacity style={styles.button} onPress={markAttendance} disabled={attendanceMarked}>
           <Text style={styles.buttonText}>Mark Attendance</Text>
         </TouchableOpacity>
       )}

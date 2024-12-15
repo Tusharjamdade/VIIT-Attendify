@@ -46,6 +46,12 @@ const Signup = () => {
     if (role === 'admin' && code !== 'ad@123') return false;
     return true;
   };
+  function formatDate(date: Date): string {
+    const day = String(date.getDate()).padStart(2, '0'); // Ensures two digits
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  }
 
   const handleSignUp = async () => {
     if (password !== confirmPassword) {
@@ -91,7 +97,7 @@ const Signup = () => {
             email,
             role,
             password,
-            createdAt: new Date(),
+            createdAt: formatDate(new Date()),
             ...(role === "student" && { rollNo }), // Conditionally add rollNo if role is "student"
           };
           await setDoc(userDocRef, userData);

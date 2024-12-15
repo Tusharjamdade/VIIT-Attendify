@@ -1,7 +1,8 @@
-import { View, Text } from 'react-native';
 import React from 'react';
+import { View, Text, useColorScheme } from 'react-native';
 import { Tabs } from 'expo-router';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 
 // Type for TabbarProps
 type TabbarProps = {
@@ -21,17 +22,19 @@ const TabIcon = ({ icon, color, name, focused }: TabbarProps) => {
 };
 
 const HomePagelayout = () => {
+  const isDarkMode = useColorScheme() === 'dark'; // Check the color scheme and pass to ThemeProvider
+
   return (
-    <>
+    <ThemeProvider value={isDarkMode ? DarkTheme : DefaultTheme}> {/* ThemeProvider will handle dynamic theme */}
       <Tabs>
-      <Tabs.Screen
+        <Tabs.Screen
           name="subject"
           options={{
             title: '',
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
-                icon="book" 
+                icon="book"
                 color={color}
                 name="Subs"
                 focused={focused}
@@ -46,7 +49,7 @@ const HomePagelayout = () => {
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
-                icon="home" // FontAwesome icon name for "fa-house"
+                icon="home"
                 color={color}
                 name="Home"
                 focused={focused}
@@ -69,9 +72,8 @@ const HomePagelayout = () => {
             ),
           }}
         />
-       
       </Tabs>
-    </>
+    </ThemeProvider>
   );
 };
 

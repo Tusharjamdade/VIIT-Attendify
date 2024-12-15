@@ -6,18 +6,19 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Switch,
   Alert,
   RefreshControl,
+  useColorScheme,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { FontAwesome5 } from '@expo/vector-icons'; // For sun and moon icons
 import { updateDoc, doc } from 'firebase/firestore';
 import { firestore } from '@/src/firebase';
 import useUserDetails from '@/hooks/useUserDetails';
 
 const Profile = () => {
+  const isDarkMode = useColorScheme() === 'dark'; 
   const { currentUser, loading: userLoading, error } = useUserDetails();
-  const [darkMode, setDarkMode] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [rollNo, setRollNo] = useState('');
   const [imageChanged, setImageChanged] = useState(false);
@@ -53,8 +54,6 @@ const Profile = () => {
     setRefreshing(false);
   };
 
-  const toggleDarkMode = () => setDarkMode((prev) => !prev);
-
   const selectImage = (index) => {
     setSelectedImage(index);
     setImageChanged(true);
@@ -75,11 +74,11 @@ const Profile = () => {
     }
   };
 
-  const bgColor = darkMode ? '#1A202C' : '#F7FAFC';
-  const textColor = darkMode ? '#E2E8F0' : '#2D3748';
-  const inputBgColor = darkMode ? '#2D3748' : '#FFFFFF';
-  const buttonBgColor = darkMode ? '#4A5568' : '#E2E8F0';
-  const buttonTextColor = darkMode ? '#E2E8F0' : '#2D3748';
+  const bgColor = isDarkMode ? '#1A202C' : '#F7FAFC';
+  const textColor = isDarkMode ? '#E2E8F0' : '#2D3748';
+  const inputBgColor = isDarkMode ? '#2D3748' : '#FFFFFF';
+  const buttonBgColor = isDarkMode ? '#4A5568' : '#E2E8F0';
+  const buttonTextColor = isDarkMode ? '#E2E8F0' : '#2D3748';
 
   if (userLoading) {
     return (
@@ -105,16 +104,12 @@ const Profile = () => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
+        {/* Header with Dark Mode Toggle */}
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 24 }}>
           <Text style={{ fontSize: 24, fontWeight: 'bold', color: textColor }}>Profile</Text>
-          <Switch
-            value={darkMode}
-            onValueChange={toggleDarkMode}
-            trackColor={{ false: '#767577', true: '#81b0ff' }}
-            thumbColor={darkMode ? '#f5dd4b' : '#f4f3f4'}
-          />
         </View>
 
+        {/* Profile Image Section */}
         <View style={{ alignItems: 'center', marginBottom: 24 }}>
           <Image
             source={
@@ -122,10 +117,11 @@ const Profile = () => {
                 ? profileImages[selectedImage].source
                 : require('@/assets/images/boy1.jpg') // Fallback image
             }
-            style={{ width: 120, height: 120, borderRadius: 60 }}
+            style={{ width: 140, height: 140, borderRadius: 80 }}
           />
         </View>
 
+        {/* Image Selector */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
           {profileImages.map((image, index) => (
             <TouchableOpacity
@@ -136,9 +132,9 @@ const Profile = () => {
               <Image
                 source={image.source}
                 style={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: 30,
+                  width: 70,
+                  height: 70,
+                  borderRadius: 40,
                   borderWidth: selectedImage === index ? 2 : 0,
                   borderColor: 'blue',
                 }}
@@ -147,6 +143,7 @@ const Profile = () => {
           ))}
         </ScrollView>
 
+        {/* Save Button */}
         {imageChanged && (
           <TouchableOpacity
             onPress={saveChanges}
@@ -163,13 +160,13 @@ const Profile = () => {
           </TouchableOpacity>
         )}
 
-        {/* Display form fields */}
+        {/* User Details Form */}
         {currentUser && [
           { label: 'First Name', value: currentUser.firstName, editable: false },
           { label: 'Last Name', value: currentUser.lastName, editable: false },
           { label: 'Email', value: currentUser.email, editable: false },
-          { label: 'Roll Number', value: rollNo, editable: true },
-          { label: 'Class', value: currentUser.className, editable: false },
+          { label: 'Roll Number', value: currentUser.rollNo.toString(), editable: true },
+          { label: 'Class', value: "Computer Science and Engineering (Data Science)", editable: false },
         ].map(({ label, value, editable }, index) => (
           <View style={{ marginBottom: 24 }} key={index}>
             <Text style={{ color: textColor, marginBottom: 8 }}>{label}</Text>
