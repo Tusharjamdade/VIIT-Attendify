@@ -15,9 +15,10 @@ import { FontAwesome5 } from '@expo/vector-icons'; // For sun and moon icons
 import { updateDoc, doc } from 'firebase/firestore';
 import { firestore } from '@/src/firebase';
 import useUserDetails from '@/hooks/useUserDetails';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 const Profile = () => {
-  const isDarkMode = useColorScheme() === 'dark'; 
+  const isDark = useColorScheme() === 'dark'; 
   const { currentUser, loading: userLoading, error } = useUserDetails();
   const [selectedImage, setSelectedImage] = useState(null);
   const [rollNo, setRollNo] = useState('');
@@ -74,11 +75,11 @@ const Profile = () => {
     }
   };
 
-  const bgColor = isDarkMode ? '#1A202C' : '#F7FAFC';
-  const textColor = isDarkMode ? '#E2E8F0' : '#2D3748';
-  const inputBgColor = isDarkMode ? '#2D3748' : '#FFFFFF';
-  const buttonBgColor = isDarkMode ? '#4A5568' : '#E2E8F0';
-  const buttonTextColor = isDarkMode ? '#E2E8F0' : '#2D3748';
+  const bgColor = isDark ? '#121212' : '#F7FAFC';
+  const textColor = isDark ? '#E2E8F0' : '#2D3748';
+  const inputBgColor = isDark ? '#2D3748' : '#FFFFFF';
+  const buttonBgColor = isDark ? '#4A5568' : '#E2E8F0';
+  const buttonTextColor = isDark ? '#E2E8F0' : '#2D3748';
 
   if (userLoading) {
     return (
@@ -100,13 +101,11 @@ const Profile = () => {
     <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
       <ScrollView
         style={{ flex: 1, padding: 16 }}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
-        {/* Header with Dark Mode Toggle */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 24 }}>
-          <Text style={{ fontSize: 24, fontWeight: 'bold', color: textColor }}>Profile</Text>
+        <View style={[styles.header, { backgroundColor: isDark ? '#121212' : '#FFFFFF' }]}>
+          <Icon name="user" size={24} color={isDark ? '#2F80ED' : '#2F80ED'} />
+          <Text style={[styles.headerTitle, { color: isDark ? '#FFFFFF' : '#2F80ED' }]}>Profile</Text>
         </View>
 
         {/* Profile Image Section */}
@@ -124,11 +123,7 @@ const Profile = () => {
         {/* Image Selector */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
           {profileImages.map((image, index) => (
-            <TouchableOpacity
-              key={index}
-              onPress={() => selectImage(index)}
-              style={{ marginRight: 8 }}
-            >
+            <TouchableOpacity key={index} onPress={() => selectImage(index)} style={{ marginRight: 8 }}>
               <Image
                 source={image.source}
                 style={{
@@ -154,9 +149,7 @@ const Profile = () => {
               marginBottom: 16,
             }}
           >
-            <Text style={{ color: buttonTextColor, textAlign: 'center', fontWeight: '600' }}>
-              Save Changes
-            </Text>
+            <Text style={{ color: buttonTextColor, textAlign: 'center', fontWeight: '600' }}>Save Changes</Text>
           </TouchableOpacity>
         )}
 
@@ -166,7 +159,7 @@ const Profile = () => {
           { label: 'Last Name', value: currentUser.lastName, editable: false },
           { label: 'Email', value: currentUser.email, editable: false },
           { label: 'Roll Number', value: currentUser.rollNo.toString(), editable: true },
-          { label: 'Class', value: "Computer Science and Engineering (Data Science)", editable: false },
+          { label: 'Class', value: 'Computer Science and Engineering (Data Science)', editable: false },
         ].map(({ label, value, editable }, index) => (
           <View style={{ marginBottom: 24 }} key={index}>
             <Text style={{ color: textColor, marginBottom: 8 }}>{label}</Text>
@@ -186,6 +179,19 @@ const Profile = () => {
       </ScrollView>
     </SafeAreaView>
   );
+};
+
+const styles = {
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    gap: 12,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '600',
+  },
 };
 
 export default Profile;

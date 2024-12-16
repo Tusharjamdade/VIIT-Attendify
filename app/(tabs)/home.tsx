@@ -44,7 +44,7 @@ const Home = () => {
   };
 
   const themeColors = {
-    background: isDarkMode ? '#1A202C' : '#F7FAFC',
+    background: isDarkMode ? 'black' : '#F7FAFC',
     cardBackground: isDarkMode ? '#2D3748' : '#E2E8F0',
     textPrimary: isDarkMode ? '#E2E8F0' : '#2D3748',
     textSecondary: isDarkMode ? '#A0AEC0' : '#4A5568',
@@ -131,7 +131,7 @@ const Home = () => {
         {/* Dashboard Section */}
         <View style={{ padding: 16, marginTop: 16 }}>
           <Text style={{ fontSize: 24, fontWeight: 'bold', color: themeColors.textPrimary, marginBottom: 16 }}>My Dashboard</Text>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-around' }}>
             {cards.map((card, index) => (
               <Card
                 key={index}

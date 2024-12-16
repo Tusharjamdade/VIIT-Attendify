@@ -89,8 +89,7 @@ const DownloadAttendance = () => {
       // Define the columns for the worksheet
       worksheet.columns = [
         { header: 'Roll Number', key: 'rollNo', width: 15 },
-        { header: 'First Name', key: 'firstName', width: 20 },
-        { header: 'Last Name', key: 'lastName', width: 20 },
+        { header: 'StudentName', key: 'StudentName', width: 20 },
         { header: 'Status', key: 'status', width: 15 },
       ];
   
@@ -98,8 +97,7 @@ const DownloadAttendance = () => {
       attendanceData.forEach((student) => {
         worksheet.addRow({
           rollNo: student.rollNo,
-          firstName: student.firstName,
-          lastName: student.lastName,
+          StudentName: student.firstName +" "+ student.lastName,
           status: student.present ? 'Present' : 'Absent',
         });
       });
@@ -134,8 +132,7 @@ const DownloadAttendance = () => {
         (student) =>
           `<tr>
             <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">${student.rollNo}</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">${student.firstName}</td>
-            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">${student.lastName}</td>
+            <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">${student.firstName} ${student.lastName}</td>
             <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">${student.present ? 'Present' : 'Absent'}</td>
           </tr>`
       )
@@ -194,8 +191,7 @@ const DownloadAttendance = () => {
           <table>
             <tr>
               <th>Roll Number</th>
-              <th>First Name</th>
-              <th>Last Name</th>
+              <th>Student Name</th>
               <th>Status</th>
             </tr>
             ${tableRows}
