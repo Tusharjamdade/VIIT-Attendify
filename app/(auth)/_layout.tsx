@@ -1,17 +1,24 @@
-
-import { createStackNavigator } from '@react-navigation/stack';
-
+import React from 'react';
+import { createStackNavigator } from '@react-navigation/stack';// Don't forget to wrap with NavigationContainer
 import Signup from './signup';
 import Signin from './signin';
+
+
 const Stack = createStackNavigator();
 
-export default function App() {
+function App() {
   return (
-    // <NavigationContainer>
-      <Stack.Navigator >
+    // <NavigationContainer> {/* Wrap with NavigationContainer */}
+    // <ThemeProvider>
+      <Stack.Navigator 
+        screenOptions={{ headerShown: false }}  
+      >
+        <Stack.Screen name="Signin" component={Signin} />
         <Stack.Screen name="Signup" component={Signup} />
-        <Stack.Screen name="signin" component={Signin} />
       </Stack.Navigator>
+      // </ThemeProvider>
     // </NavigationContainer>
   );
 }
+
+export default App;

@@ -15,6 +15,7 @@ import { auth, firestore } from '../../src/firebase';
 import { doc, getDoc, collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 import 'nativewind';
 import StudentProfile from '@/components/StudentProfile';
+import { DarkTheme, DefaultTheme, useTheme } from '@react-navigation/native';
 
 const subjects = ['Mathematics', 'Science', 'History', 'Literature', 'Physics', 'Chemistry', 'Biology'];
 
@@ -30,7 +31,7 @@ export default function PostLecturePage() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const isDarkMode = useColorScheme() === 'dark';
+  const { colors, dark } = useTheme(); // Fetching colors and theme status
 
   const fetchCurrentUserDetails = async () => {
     try {
@@ -153,14 +154,10 @@ export default function PostLecturePage() {
     }
   };
 
-  const containerStyle = isDarkMode
-    ? 'flex-1 bg-black text-white'
-    : 'flex-1 bg-white text-gray-800';
-
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center">
-        <ActivityIndicator size="large" color={isDarkMode ? '#00BFFF' : '#003366'} />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -174,20 +171,21 @@ export default function PostLecturePage() {
   }
 
   return (
-    <ScrollView className={`${containerStyle} p-5`}>
+    <ScrollView className={`flex-1 ${dark ? 'bg-black' : 'bg-white'}`}>
       <StudentProfile />
+      <View className='p-5'>
 
-      <Text className="text-2xl font-bold text-center mb-4" style={{ color: isDarkMode ? '#00BFFF' : '#003366' }}>
+      <Text className={`text-2xl font-bold text-center mb-4 ${dark ? 'text-blue-400' : 'text-blue-800'}`}>
         Post Lecture Details
       </Text>
 
       <View className="mb-4">
-        <Text className="text-lg" style={{ color: isDarkMode ? '#00BFFF' : '#003366' }}>Subject</Text>
-        <View className="border rounded-md" style={{ borderColor: isDarkMode ? '#00BFFF' : '#003366' }}>
+        <Text className={`text-lg ${dark ? 'text-blue-400' : 'text-blue-800'}`}>Subject</Text>
+        <View className={`border rounded-md ${dark ? 'border-blue-400' : 'border-blue-800'}`}>
           <Picker
             selectedValue={subject}
             onValueChange={(itemValue) => setSubject(itemValue)}
-            style={{ color: isDarkMode ? '#FFFFFF' : '#000000' }}
+            style={{ color: dark ? '#FFFFFF' : '#000000' }}
           >
             {subjects.map((sub, index) => (
               <Picker.Item key={index} label={sub} value={sub} />
@@ -197,13 +195,13 @@ export default function PostLecturePage() {
       </View>
 
       <View className="mb-4">
-        <Text className="text-lg" style={{ color: isDarkMode ? '#00BFFF' : '#003366' }}>Start Time</Text>
+        <Text className={`text-lg ${dark ? 'text-blue-400' : 'text-blue-800'}`}>Start Time</Text>
         <TouchableOpacity
           onPress={() => setShowStartPicker(true)}
           className="p-3 rounded-md"
-          style={{ backgroundColor: isDarkMode ? '#333333' : '#E0E0E0' }}
+          style={{ backgroundColor: dark ? '#333333' : '#E0E0E0' }}
         >
-          <Text style={{ color: isDarkMode ? '#00BFFF' : '#003366' }}>{formatTime(startTime)}</Text>
+          <Text style={{ color: dark ? '#00BFFF' : '#003366' }}>{formatTime(startTime)}</Text>
         </TouchableOpacity>
         {showStartPicker && (
           <DateTimePicker
@@ -217,13 +215,13 @@ export default function PostLecturePage() {
       </View>
 
       <View className="mb-4">
-        <Text className="text-lg" style={{ color: isDarkMode ? '#00BFFF' : '#003366' }}>End Time</Text>
+        <Text className={`text-lg ${dark ? 'text-blue-400' : 'text-blue-800'}`}>End Time</Text>
         <TouchableOpacity
           onPress={() => setShowEndPicker(true)}
           className="p-3 rounded-md"
-          style={{ backgroundColor: isDarkMode ? '#333333' : '#E0E0E0' }}
+          style={{ backgroundColor: dark ? '#333333' : '#E0E0E0' }}
         >
-          <Text style={{ color: isDarkMode ? '#00BFFF' : '#003366' }}>{formatTime(endTime)}</Text>
+          <Text style={{ color: dark ? '#00BFFF' : '#003366' }}>{formatTime(endTime)}</Text>
         </TouchableOpacity>
         {showEndPicker && (
           <DateTimePicker
@@ -237,13 +235,13 @@ export default function PostLecturePage() {
       </View>
 
       <View className="mb-4">
-        <Text className="text-lg" style={{ color: isDarkMode ? '#00BFFF' : '#003366' }}>Lecture Date</Text>
+        <Text className={`text-lg ${dark ? 'text-blue-400' : 'text-blue-800'}`}>Lecture Date</Text>
         <TouchableOpacity
           onPress={() => setShowDatePicker(true)}
           className="p-3 rounded-md"
-          style={{ backgroundColor: isDarkMode ? '#333333' : '#E0E0E0' }}
+          style={{ backgroundColor: dark ? '#333333' : '#E0E0E0' }}
         >
-          <Text style={{ color: isDarkMode ? '#00BFFF' : '#003366' }}>{lectureDate.toDateString()}</Text>
+          <Text style={{ color: dark ? '#00BFFF' : '#003366' }}>{lectureDate.toDateString()}</Text>
         </TouchableOpacity>
         {showDatePicker && (
           <DateTimePicker
@@ -256,44 +254,43 @@ export default function PostLecturePage() {
       </View>
 
       <View className="mb-4">
-        <Text className="text-lg" style={{ color: isDarkMode ? '#00BFFF' : '#003366' }}>Location</Text>
+        <Text className={`text-lg ${dark ? 'text-blue-400' : 'text-blue-800'}`}>Location</Text>
         <TextInput
           className="border rounded-md p-3"
           style={{
-            color: isDarkMode ? '#FFFFFF' : '#000000',
-            backgroundColor: isDarkMode ? '#333333' : '#FFFFFF',
-            borderColor: isDarkMode ? '#00BFFF' : '#003366',
+            color: dark ? '#FFFFFF' : '#000000',
+            backgroundColor: dark ? '#333333' : '#FFFFFF',
+            borderColor: dark ? '#00BFFF' : '#003366',
           }}
           onChangeText={setLocation}
           value={location}
           placeholder="Enter lecture location"
-          placeholderTextColor={isDarkMode ? '#BBBBBB' : '#A0AEC0'}
+          placeholderTextColor={dark ? '#BBBBBB' : '#A0AEC0'}
         />
       </View>
 
       <View className="mb-4">
-        <Text className="text-lg" style={{ color: isDarkMode ? '#00BFFF' : '#003366' }}>Teacher Name</Text>
+        <Text className={`text-lg ${dark ? 'text-blue-400' : 'text-blue-800'}`}>Teacher Name</Text>
         <TextInput
           className="border rounded-md p-3 bg-gray-100"
           style={{
-            color: isDarkMode ? '#FFFFFF' : '#000000',
-            backgroundColor: isDarkMode ? '#333333' : '#E0E0E0',
-            borderColor: isDarkMode ? '#00BFFF' : '#003366',
+            color: dark ? '#FFFFFF' : '#000000',
+            backgroundColor: dark ? '#333333' : '#E0E0E0',
+            borderColor: dark ? '#00BFFF' : '#003366',
           }}
-          value={teacherName}
           editable={false}
+          value={teacherName}
         />
       </View>
 
       <TouchableOpacity
-  className="p-4 rounded-md"
-  style={{ backgroundColor: isDarkMode ? '#00BFFF' : '#003366' }}
-  onPress={handleSubmit}
->
-  <Text className="text-white font-bold text-lg text-center">Submit</Text>
-</TouchableOpacity>
-
+        onPress={handleSubmit}
+        className="bg-blue-500 p-4 rounded-md"
+        style={{ backgroundColor: dark ? '#1D4ED8' : '#3182CE' }}
+      >
+        <Text style={{ color: '#FFFFFF', textAlign: 'center' }}>Submit Lecture</Text>
+      </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 }
-

@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, Text, Image, ScrollView, ActivityIndicator, TouchableOpacity, Dimensions, RefreshControl, useColorScheme } from 'react-native';
+import { View, Text, Image, ScrollView, ActivityIndicator, TouchableOpacity, Dimensions, RefreshControl } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Feather } from '@expo/vector-icons'; // Adjust the path as needed
+import { Feather } from '@expo/vector-icons';
 import useUserDetails from '@/hooks/useUserDetails';
+import { DarkTheme, DefaultTheme, useTheme } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 const cardWidth = (width - 75) / 2;
@@ -35,7 +36,7 @@ const Card = ({ title, icon, onPress, textColor, backgroundColor }) => (
 const Home = () => {
   const { currentUser, loading, error, refetch } = useUserDetails();
   const [refreshing, setRefreshing] = React.useState(false);
-  const isDarkMode = useColorScheme() === 'dark';
+  const { colors } = useTheme();
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -43,44 +44,58 @@ const Home = () => {
     setRefreshing(false);
   };
 
-  const themeColors = {
-    background: isDarkMode ? 'black' : '#F7FAFC',
-    cardBackground: isDarkMode ? '#2D3748' : '#E2E8F0',
-    textPrimary: isDarkMode ? '#E2E8F0' : '#2D3748',
-    textSecondary: isDarkMode ? '#A0AEC0' : '#4A5568',
-    accent: '#3B82F6',
-  };
-
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: themeColors.background }}>
-        <ActivityIndicator size="large" color={themeColors.accent} />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   if (error || !currentUser) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: themeColors.background }}>
-        <Text style={{ color: themeColors.accent, fontSize: 18 }}>Failed to load user details</Text>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
+        <Text style={{ color: colors.primary, fontSize: 18 }}>Failed to load user details</Text>
       </View>
     );
   }
 
-  const cards = [
+  const allCards = [
+    { title: "Location", icon: "map-pin", path: "/setlocation" },
+    { title: "Add Lecture", icon: "plus-circle", path: "/postlecture" },
+    { title: "Access Code", icon: "key", path: "/setaccesscode" },
     { title: "Attendance", icon: "user-check", path: "/attendance" },
+    { title: "Download", icon: "download", path: "/downloadattendance" },
+    { title: "Users", icon: "users", path: "/users" },
     { title: "Schedule", icon: "calendar", path: "/" },
     { title: "Support", icon: "help-circle", path: "/support" },
-    { title: "Add Lecture", icon: "plus-circle", path: "/postlecture" },
-    { title: "Face Recog.", icon: "camera", path: "/facerec" },
-    { title: "Download", icon: "download", path: "/downloadattendance" },
-    { title: "Users", icon: "user", path: "/users" },
+    { title: "Support Requests", icon: "message-square", path: "/supportRequests" },
     { title: "Settings", icon: "settings", path: "/settings" },
-    { title: "Location", icon: "location-outline", path: "/setlocation" },
     { title: "Help", icon: "help-circle", path: "/faq" },
     { title: "Notifications", icon: "bell", path: "/notifications" },
-    { title: "Access Code", icon: "message-square", path: "/setaccesscode" },
   ];
+
+  // Filter cards based on user role
+  const filteredCards = (() => {
+    switch (currentUser.role) {
+      case "student":
+        return allCards.filter((card) => ["Attendance", "Users", "Support", "Help"].includes(card.title));
+      case "classRepresentative":
+        return allCards.filter((card) =>
+          ["Attendance", "Users", "Download", "Support", "Help"].includes(card.title)
+        );
+      case "faculty":
+        return allCards.filter((card) =>
+          ["Add Lecture", "Users", "Support", "Help", "Download"].includes(card.title)
+        );
+      case "admin":
+        return allCards.filter((card) =>
+          ["Location", "Access Code", "Users", "Download", "Help", "Support Requests"].includes(card.title)
+        );
+      default:
+        return allCards; // No cards for unknown roles
+    }
+  })();
 
   const imageMap = {
     boy1: require('@/assets/images/boy1.jpg'),
@@ -98,48 +113,48 @@ const Home = () => {
   const imageUrl = currentUser?.image ? imageMap[currentUser.image] : null;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={themeColors.accent}
+            tintColor={colors.primary}
           />
         }
       >
         {/* Profile Section */}
-        <View style={{ backgroundColor: themeColors.cardBackground, padding: 16, paddingTop: 10, borderRadius: 8 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-            <Image
-              source={imageUrl || require('@/assets/images/default.jpg')}
-              style={{ width: 80, height: 80, borderRadius: 40 }}
-            />
-            <View style={{ marginLeft: 16 }}>
-              <Text style={{ fontSize: 20, fontWeight: 'bold', color: themeColors.textPrimary }}>
-                {currentUser.firstName} {currentUser.lastName}
-              </Text>
-              <Text style={{ fontSize: 16, color: themeColors.textSecondary }}>{currentUser.email}</Text>
-            </View>
-          </View>
-          <Text style={{ fontSize: 24, fontWeight: 'bold', color: themeColors.textPrimary, marginBottom: 8 }}>
-            Hi, {currentUser.firstName}
-          </Text>
-          <Text style={{ fontSize: 16, color: themeColors.textSecondary }}>Welcome to your class</Text>
-        </View>
+        <View style={{ backgroundColor: colors.card, padding: 16, paddingTop: 10 }}>
+                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+                   <Image
+                     source={imageUrl || require('@/assets/images/default.jpg')}
+                     style={{ width: 80, height: 80, borderRadius: 40,borderColor: colors.primary ,borderWidth: 3 }}
+                   />
+                   <View style={{ marginLeft: 16 }}>
+                     <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.text }}>
+                       {currentUser.firstName} {currentUser.lastName}
+                     </Text>
+                     <Text style={{ fontSize: 16, color: colors.text }}>{currentUser.email}</Text>
+                   </View>
+                 </View>
+                 <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 8, color: colors.text }}>
+                   Hi, {currentUser.firstName}
+                 </Text>
+                 <Text style={{ fontSize: 16, color: colors.text }}>Welcome to your class</Text>
+               </View>
 
         {/* Dashboard Section */}
-        <View style={{ padding: 16, marginTop: 16 }}>
-          <Text style={{ fontSize: 24, fontWeight: 'bold', color: themeColors.textPrimary, marginBottom: 16 }}>My Dashboard</Text>
+        <View style={{ padding: 16 }}>
+          <Text style={{ fontSize: 24, fontWeight: 'bold', color: colors.text, marginBottom: 16 }}>My Dashboard</Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-around' }}>
-            {cards.map((card, index) => (
+            {filteredCards.map((card, index) => (
               <Card
                 key={index}
                 title={card.title}
                 icon={card.icon}
                 onPress={() => router.push({ pathname: card.path })}
-                textColor={themeColors.accent}
-                backgroundColor={themeColors.cardBackground}
+                textColor={colors.primary}
+                backgroundColor={colors.card}
               />
             ))}
           </View>
@@ -150,3 +165,4 @@ const Home = () => {
 };
 
 export default Home;
+

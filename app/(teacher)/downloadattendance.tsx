@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Image,
+  useColorScheme,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { firestore } from '../../src/firebase';
@@ -19,6 +20,7 @@ import * as Print from 'expo-print';
 import useUserDetails from '@/hooks/useUserDetails';
 import StudentList from '@/components/StudentList';
 import StudentProfile from '@/components/StudentProfile';
+import { useTheme } from '@react-navigation/native';
 
 const DownloadAttendance = () => {
   const router = useRouter();
@@ -26,6 +28,7 @@ const DownloadAttendance = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [lectures, setLectures] = useState([]);
   const { currentUser, refetch } = useUserDetails();
+  const { colors } = useTheme();
 
   useEffect(() => {
     if (currentUser) {
@@ -259,116 +262,101 @@ const DownloadAttendance = () => {
 
   return (
     <ScrollView
-  style={{ flex: 1, backgroundColor: '#f0f8ff' }}
-  refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
->
-  {/* <StudentList/> */}
- {/* Profile Section */}
-         <View style={{ backgroundColor: '#fff', padding: 16, paddingTop: 10 }}>
-           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-             <Image
-               source={imageUrl || require('@/assets/images/default.jpg')}
-               style={{ width: 80, height: 80, borderRadius: 40 }}
-             />
-             <View style={{ marginLeft: 16 }}>
-               <Text style={{ fontSize: 20, fontWeight: 'bold' }}>
-                 {currentUser.firstName} {currentUser.lastName}
-               </Text>
-               <Text style={{ fontSize: 16, color: '#666' }}>{currentUser.email}</Text>
-             </View>
-           </View>
-         </View>
- 
-  <View style={{ padding: 16 }}>
-    <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 16, color: '#003366' }}>
-      Your Lectures
-    </Text>
+      style={{ flex: 1, backgroundColor: colors.background }}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+    >
+     <StudentProfile/>
 
-    {lectures.map((lecture) => (
-      <View
-        key={lecture.id}
-        style={{
-          backgroundColor: '#ffffff',
-          borderRadius: 8,
-          padding: 16,
-          marginBottom: 12,
-          shadowColor: '#000',
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
-          elevation: 2,
-          flexDirection: 'row', // Align content horizontally
-          alignItems: 'center', // Center the content vertically
-        }}
-      >
-        {/* Circle with Subject's First Letter */}
-        <View
-          style={{
-            width: 50,
-            height: 50,
-            borderRadius: 25,
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: '#4CAF50', // Green background
-            marginRight: 16, // Space between the circle and the text
-            shadowColor: '#000',
-            shadowOpacity: 0.1,
-            shadowRadius: 4,
-            elevation: 3,
-          }}
-        >
-          <Text style={{ color: '#fff', fontSize: 24, fontWeight: 'bold' }}>
-            {lecture.subject[0].toUpperCase()}
-          </Text>
-        </View>
+      <View style={{ padding: 16 }}>
+        <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 16, color: colors.text }}>
+          Your Lectures
+        </Text>
 
-        {/* Lecture Details */}
-        <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#003366' }}>
-            {lecture.subject}
-          </Text>
-          <Text style={{ fontSize: 14, color: '#666' }}>
-            Date: {lecture.lectureDate} | {lecture.startTime} - {lecture.endTime}
-          </Text>
-          <Text style={{ fontSize: 14, color: '#666' }}>
-            Location: {lecture.location}
-          </Text>
-          <Text style={{ fontSize: 14, color: '#666' }}>
-            Teacher: {lecture.teacherName}
-          </Text>
-
-          {/* Action buttons */}
-          <View style={{ flexDirection: 'row', marginTop: 12 }}>
-            <TouchableOpacity
-              onPress={() => handleDownload('PDF', lecture.id, lecture.subject, lecture)}
+        {lectures.map((lecture) => (
+          <View
+            key={lecture.id}
+            style={{
+              backgroundColor: colors.card,
+              borderRadius: 8,
+              padding: 16,
+              marginBottom: 12,
+              shadowColor: colors.border,
+              shadowOpacity: 0.1,
+              shadowRadius: 4,
+              elevation: 2,
+              flexDirection: 'row',
+              alignItems: 'center',
+            }}
+          >
+            {/* Circle with Subject's First Letter */}
+            <View
               style={{
-                backgroundColor: '#003366',
-                paddingVertical: 8,
-                paddingHorizontal: 16,
-                borderRadius: 8,
-                marginRight: 8,
+                width: 50,
+                height: 50,
+                borderRadius: 25,
+                justifyContent: 'center',
+                alignItems: 'center',
+                backgroundColor: '#4CAF50',
+                marginRight: 16,
+                shadowColor: '#000',
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                elevation: 3,
               }}
             >
-              <Text style={{ color: '#fff', fontWeight: 'bold' }}>Download PDF</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => handleDownload('Excel', lecture.id, lecture.subject)}
-              style={{
-                backgroundColor: '#003366',
-                paddingVertical: 8,
-                paddingHorizontal: 16,
-                borderRadius: 8,
-              }}
-            >
-              <Text style={{ color: '#fff', fontWeight: 'bold' }}>Download Excel</Text>
-            </TouchableOpacity>
+              <Text style={{ color: '#fff', fontSize: 24, fontWeight: 'bold' }}>
+                {lecture.subject[0].toUpperCase()}
+              </Text>
+            </View>
+
+            {/* Lecture Details */}
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.text }}>
+                {lecture.subject}
+              </Text>
+              <Text style={{ fontSize: 14, color: colors.text }}>
+                Date: {lecture.lectureDate} | {lecture.startTime} - {lecture.endTime}
+              </Text>
+              <Text style={{ fontSize: 14, color: colors.text }}>
+                Location: {lecture.location}
+              </Text>
+              <Text style={{ fontSize: 14, color: colors.text }}>
+                Teacher: {lecture.teacherName}
+              </Text>
+
+              {/* Action buttons */}
+              <View style={{ flexDirection: 'row', marginTop: 12 }}>
+                <TouchableOpacity
+                  onPress={() => handleDownload('PDF', lecture.id, lecture.subject, lecture)}
+                  style={{
+                    backgroundColor: colors.primary,
+                    paddingVertical: 8,
+                    paddingHorizontal: 16,
+                    borderRadius: 8,
+                    marginRight: 8,
+                  }}
+                >
+                  <Text style={{ color: colors.background, fontWeight: 'bold' }}>Download PDF</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => handleDownload('Excel', lecture.id, lecture.subject)}
+                  style={{
+                    backgroundColor: colors.primary,
+                    paddingVertical: 8,
+                    paddingHorizontal: 16,
+                    borderRadius: 8,
+                  }}
+                >
+                  <Text style={{ color: colors.background, fontWeight: 'bold' }}>Download Excel</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
-        </View>
+        ))}
       </View>
-    ))}
-  </View>
-</ScrollView>
-
+    </ScrollView>
   );
 };
 
 export default DownloadAttendance;
+

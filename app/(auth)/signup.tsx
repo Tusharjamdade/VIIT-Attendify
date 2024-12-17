@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   View,
@@ -27,8 +26,9 @@ import {
   signOut,
 } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
+import { router, useNavigation } from 'expo-router';
 
-const Signup = () => {
+const Signup = ({navigation}) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [rollNo, setRollNo] = useState("");
@@ -46,7 +46,8 @@ const Signup = () => {
     if (role === 'admin' && code !== 'ad@123') return false;
     return true;
   };
-  function formatDate(date: Date): string {
+
+  function formatDate(date) {
     const day = String(date.getDate()).padStart(2, '0'); // Ensures two digits
     const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
     const year = date.getFullYear();
@@ -58,15 +59,21 @@ const Signup = () => {
       Alert.alert('Error', 'Passwords do not match.');
       return;
     }
-    if(role == "student" && rollNo <= 0){
+    if (role == "student" && rollNo <= 0) {
       Alert.alert('Error', 'Invalid Roll No');
       return;
     }
 
-    if (role !== 'student' && !validateRoleCode() ) {
+    if (role !== 'student' && !validateRoleCode()) {
       Alert.alert('Error', 'Invalid code for the selected role.');
       return;
     }
+    setFirstName("")
+    setLastName("")
+    setEmail("")
+    setPassword("")
+    setConfirmPassword("")
+    setRollNo("")
 
     try {
       // Create user in Firebase Auth
@@ -77,17 +84,31 @@ const Signup = () => {
       await sendEmailVerification(user);
       Alert.alert(
         'Verify Email',
-        'A verification email has been sent to your email address. You have 1 minute to verify your email.'
+        'A verification email has been sent to your email address. Please verify it to continue.'
       );
 
       // Sign out the user until verification is complete
       await signOut(auth);
 
-      // Start a 1-minute timer to check verification status
-      const timer = setTimeout(async () => {
-        // Check if the user verified their email
+      // Timeout to clear interval and delete the user if not verified within 1 minute
+      const timeout = setTimeout(async () => {
+        await user.reload();
+        if (!user.emailVerified) {
+          await deleteUser(user);
+          Alert.alert(
+            'Verification Failed',
+            'You did not verify your email within 1 minute. Please try signing up again.'
+          );
+        }
+      }, 60000); // 1-minute timeout
+
+      // Check verification status periodically
+      const interval = setInterval(async () => {
         await user.reload();
         if (user.emailVerified) {
+          clearInterval(interval); // Stop the interval when verified
+          clearTimeout(timeout); // Clear timeout to avoid deleting verified user
+
           // Store user details in Firestore
           const userDocRef = doc(firestore, 'users', user.uid);
           const userData = {
@@ -102,28 +123,25 @@ const Signup = () => {
           };
           await setDoc(userDocRef, userData);
           Alert.alert('Success', 'Account created successfully after verification!');
-        } else {
-          await deleteUser(user)
-          Alert.alert(
-            'Verification Failed',
-            'You did not verify your email within the 30 seconds window. Please try signing up again.'
-          );
+          router.push({pathname:"/(auth)/signin"})
         }
-      }, 30000); // 1-minute timeout
+      }, 5000); // Check every 5 seconds
 
-      return () => clearTimeout(timer); // Clear timer on component unmount
     } catch (error) {
       console.error('Error signing up:', error);
       Alert.alert('Error', error.message);
     }
   };
+
   const handleRollNoChange = (text) => {
     // Ensure only numeric characters are accepted
     const numericValue = text.replace(/[^0-9]/g, ""); // Remove non-numeric characters
     setRollNo(numericValue);
   };
+
   return (
-    <ScrollView contentContainerStyle={{ flexGrow: 1 }} className="flex-1 bg-gray-100 p-6">
+    <ScrollView   contentContainerStyle={{ flexGrow: 1, marginTop: 20, alignItems: 'center' }}
+    className="flex-1 bg-gray-100 p-6">
       <View className="items-center mb-8">
         <Text className="text-4xl font-bold text-gray-800">Create Account</Text>
         <Text className="text-lg text-gray-600 mt-2 text-center">
@@ -144,15 +162,14 @@ const Signup = () => {
 
       {/* Last Name */}
       <View className="flex-row items-center w-full h-12 bg-white rounded-lg px-4 mb-4 shadow-md">
-           <IdentificationIcon size={20} color="#6B7280" />
-           <TextInput
-             placeholder="Enter your last name"
-             className="flex-1 ml-2 text-gray-700"
-             value={lastName}
-             onChangeText={setLastName}
-           />
-         </View>
-      
+        <IdentificationIcon size={20} color="#6B7280" />
+        <TextInput
+          placeholder="Enter your last name"
+          className="flex-1 ml-2 text-gray-700"
+          value={lastName}
+          onChangeText={setLastName}
+        />
+      </View>
 
       {/* Email */}
       <View className="flex-row items-center w-full h-12 bg-white rounded-lg px-4 mb-4 shadow-md">
@@ -219,17 +236,17 @@ const Signup = () => {
       </View>
 
       {/* Roll No */}
-      {(role == "student" || role == "class_representative") &&(    
-      <View className="flex-row items-center w-full h-12 bg-white rounded-lg px-4 mb-4 shadow-md">
-        <IdentificationIcon size={20} color="#6B7280" />
-        <TextInput
-          keyboardType={"numeric"}
-          placeholder="Enter your roll no"
-          className="flex-1 ml-2 text-gray-700"
-          value={rollNo.toString()}
-          onChangeText={handleRollNoChange}
-        />
-      </View>
+      {(role == "student" || role == "class_representative") && (
+        <View className="flex-row items-center w-full h-12 bg-white rounded-lg px-4 mb-4 shadow-md">
+          <IdentificationIcon size={20} color="#6B7280" />
+          <TextInput
+            keyboardType={"numeric"}
+            placeholder="Enter your roll no"
+            className="flex-1 ml-2 text-gray-700"
+            value={rollNo.toString()}
+            onChangeText={handleRollNoChange}
+          />
+        </View>
       )}
       {role !== 'student' && (
         <View className="flex-row items-center w-full h-12 bg-white rounded-lg px-4 mb-4 shadow-md">
@@ -251,28 +268,23 @@ const Signup = () => {
         <Text className="text-white font-semibold text-lg">Sign Up</Text>
       </TouchableOpacity>
 
-            {/* Horizontal Line */}
-            <View className="flex-row items-center mb-6">
-              <View className="flex-1 h-px bg-gray-300" />
-              <Text className="mx-4 text-gray-500">or</Text>
-              <View className="flex-1 h-px bg-gray-300" />
-            </View>
-      
-            {/* Sign In with Google Button */}
-            <TouchableOpacity
-              className="w-full h-12 bg-white border border-gray-300 rounded-lg items-center justify-center shadow-md flex-row"
-              
-            >
-              <Image
-                source={{
-                  uri: 'https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg',
-                }}
-                style={{ width: 20, height: 20, marginRight: 10 }}
-              />
-              <Text className="text-gray-700 font-semibold text-lg">
-                Sign In with Google
-              </Text>
-            </TouchableOpacity>
+      <View className="flex-row items-center mb-6">
+        <View className="flex-1 h-px bg-gray-300" />
+        <Text className="mx-4 text-gray-500">or</Text>
+        <View className="flex-1 h-px bg-gray-300" />
+      </View>
+
+      {/* Sign Up Link */}
+      <View className="flex-row items-center mt-2">
+        <Text className="text-gray-700">
+          Already have an account?{' '}
+        </Text>
+        <TouchableOpacity
+           onPress={() =>navigation.navigate('Signin')}  
+        >
+          <Text className="text-blue-500 font-semibold">Sign In</Text>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 };

@@ -6,6 +6,7 @@ import StudentProfile from '@/components/StudentProfile';
 import { firestore } from '@/src/firebase';
 import { collection, getDocs } from 'firebase/firestore';
 import useUserDetails from '@/hooks/useUserDetails';
+import { useTheme } from '@react-navigation/native';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -13,7 +14,9 @@ const AttendanceReport = () => {
   const { currentUser } = useUserDetails();
   const [attendanceStats, setAttendanceStats] = useState({ total: 0, present: 0 });
   const [loading, setLoading] = useState(true);
-  const isDark = useColorScheme() === 'dark';
+  
+  // Use the useTheme hook to get the current theme
+  const { colors } = useTheme();
 
   useEffect(() => {
     const fetchAttendance = async () => {
@@ -47,8 +50,8 @@ const AttendanceReport = () => {
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: isDark ? '#121212' : '#FFFFFF' }]}>
-        <Text style={[styles.loadingText, { color: isDark ? '#FFFFFF' : '#666' }]}>Loading Attendance Report...</Text>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <Text style={[styles.loadingText, { color: colors.text }]}>Loading Attendance Report...</Text>
       </SafeAreaView>
     );
   }
@@ -75,23 +78,17 @@ const AttendanceReport = () => {
   ];
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? 'black' : '#FFFFFF' }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView>
-        {/* Header */}
-        <View style={[styles.header, { backgroundColor: isDark ? '#121212' : '#FFFFFF' }]}>
-          <Icon name="home" size={24} color={isDark ? '#2F80ED' : '#2F80ED'} />
-          <Text style={[styles.headerTitle, { color: isDark ? '#FFFFFF' : '#2F80ED' }]}>Attendity</Text>
-        </View>
-
         {/* Profile Section */}
         <StudentProfile />
 
         {/* Title */}
-        <Text style={[styles.title, { color: isDark ? '#FFFFFF' : '#2F80ED' }]}>Check Attendance Report</Text>
+        <Text style={[styles.title, { color: colors.primary }]}>Check Attendance Report</Text>
 
         {/* Overall Percentage */}
         <View style={styles.overallSection}>
-          <Text style={[styles.overallText, { color: isDark ? '#FFFFFF' : '#666' }]}>
+          <Text style={[styles.overallText, { color: colors.text }]}>
             Overall Percentage: {overallPercentage}%
           </Text>
         </View>
@@ -104,7 +101,7 @@ const AttendanceReport = () => {
             height={220}
             chartConfig={{
               color: (opacity = 1) => `rgba(47, 128, 237, ${opacity})`,
-              labelColor: (opacity = 1) => (isDark ? `rgba(255, 255, 255, ${opacity})` : `rgba(0, 0, 0, ${opacity})`),
+              labelColor: (opacity = 1) => (colors.text ? `rgba(255, 255, 255, ${opacity})` : `rgba(0, 0, 0, ${opacity})`),
             }}
             accessor="population"
             backgroundColor="transparent"
@@ -114,24 +111,24 @@ const AttendanceReport = () => {
         </View>
 
         {/* Stats */}
-        <View style={[styles.statsContainer, { backgroundColor: isDark ? '#333333' : '#F8F9FA' }]}>
+        <View style={[styles.statsContainer, { backgroundColor: colors.card }]}>
           <View style={styles.statItem}>
-            <Text style={[styles.statLabel, { color: isDark ? '#FFFFFF' : '#666' }]}>Total Classes</Text>
-            <Text style={[styles.statValue, { color: isDark ? '#2F80ED' : '#2F80ED' }]}>{total}</Text>
+            <Text style={[styles.statLabel, { color: colors.text }]}>Total Classes</Text>
+            <Text style={[styles.statValue, { color: colors.primary }]}>{total}</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={[styles.statLabel, { color: isDark ? '#FFFFFF' : '#666' }]}>Present Days</Text>
-            <Text style={[styles.statValue, { color: isDark ? '#2F80ED' : '#2F80ED' }]}>{present}</Text>
+            <Text style={[styles.statLabel, { color: colors.text }]}>Present Days</Text>
+            <Text style={[styles.statValue, { color: colors.primary }]}>{present}</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={[styles.statLabel, { color: isDark ? '#FFFFFF' : '#666' }]}>Absent Days</Text>
-            <Text style={[styles.statValue, { color: isDark ? '#2F80ED' : '#2F80ED' }]}>{absent}</Text>
+            <Text style={[styles.statLabel, { color: colors.text }]}>Absent Days</Text>
+            <Text style={[styles.statValue, { color: colors.primary }]}>{absent}</Text>
           </View>
         </View>
 
         {/* Encouragement Message */}
-        <Text style={[styles.encouragementText, { color: isDark ? '#FFFFFF' : '#2F80ED' }]}>
-          Keep Up the Good Work!
+        <Text style={[styles.encouragementText, { color: colors.primary }]}>
+        Great Job, Keep It Up!
         </Text>
       </ScrollView>
     </SafeAreaView>
@@ -141,16 +138,6 @@ const AttendanceReport = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    gap: 12,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '600',
   },
   title: {
     fontSize: 24,

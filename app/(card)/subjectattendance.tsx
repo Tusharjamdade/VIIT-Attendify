@@ -372,24 +372,15 @@
 //   },
 // });
 
-
 import React, { useState } from 'react';
 import {
-  Alert,
-  Button,
-  PermissionsAndroid,
-  Platform,
   SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   View,
-  TouchableOpacity,
 } from 'react-native';
-import * as LocalAuthentication from 'expo-local-authentication';
-import * as Location from 'expo-location';
-import { firestore } from '@/src/firebase';
-import { addDoc, collection } from 'firebase/firestore';
+import { useTheme } from '@react-navigation/native'; // Import hook
 import StudentProfile from '@/components/StudentProfile';
 import StudentList from '@/components/StudentList';
 import { useSearchParams } from 'expo-router/build/hooks';
@@ -400,15 +391,16 @@ export default function SubjectAttendance() {
   const [loading, setLoading] = useState(false);
   const params = useSearchParams();
   const subjectDetailsString = params.get('subjectDetails');
+  const { colors, dark } = useTheme(); // Get theme colors and dark mode status
 
   const details = JSON.parse(subjectDetailsString || '{}');
   console.log(details);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <StudentProfile />
-         <SubjectCard
+        <SubjectCard
           subjectId={details.id}
           subjectName={details.subject || 'Unknown Subject'}
           startTime={details.startTime || 'N/A'}
@@ -416,9 +408,7 @@ export default function SubjectAttendance() {
           date={details.lectureDate || 'N/A'}
           teacherName={details.teacherName || 'Unknown Teacher'}
           location={details.location || 'N/A'}
-          // presentCount={10}
-          // totalCount={10}
-        /> 
+        />
         <StudentList lecture={details} />
       </ScrollView>
     </SafeAreaView>
@@ -428,7 +418,6 @@ export default function SubjectAttendance() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f0f0f0',
   },
   scrollContent: {
     padding: 16,
@@ -461,4 +450,3 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
-

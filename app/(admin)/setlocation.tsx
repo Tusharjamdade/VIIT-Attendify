@@ -6,22 +6,53 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  Modal,
+  Alert,
   ScrollView,
   useColorScheme,
+  Platform,
+  PermissionsAndroid
 } from 'react-native';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { firestore } from '@/src/firebase';
 import { MapPinIcon, GlobeAltIcon, ArrowsRightLeftIcon } from 'react-native-heroicons/outline';
+import * as Location from 'expo-location';
 
 const SetLocation = () => {
   const [classLatitude, setClassLatitude] = useState('');
   const [classLongitude, setClassLongitude] = useState('');
   const [distance, setDistance] = useState('');
   const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [loading, setLoading] = useState(true); // Track loading state
   const isDark = useColorScheme() === 'dark';
+
+  const requestLocationPermission = async () => {
+    if (Platform.OS === 'android') {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+      );
+      return granted === PermissionsAndroid.RESULTS.GRANTED;
+    }
+    return true;
+  };
+
+  const getLocation = async () => {
+    const hasPermission = await requestLocationPermission();
+    if (!hasPermission) {
+      Alert.alert('Permission Denied', 'Location access is required.');
+      return null;
+    }
+
+    try {
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+      return location.coords;
+    } catch (error) {
+      console.error('Location Error:', error);
+      Alert.alert('Error', 'Unable to fetch location. Please try again.');
+      return null;
+    }
+  };
 
   useEffect(() => {
     const fetchLocation = async () => {
@@ -39,7 +70,7 @@ const SetLocation = () => {
       } catch (err) {
         setError('Failed to fetch document: ' + err.message);
       } finally {
-        setLoading(false);
+        setLoading(false); // Stop loading after data fetch
       }
     };
 
@@ -68,17 +99,28 @@ const SetLocation = () => {
         classLongitude: parseFloat(classLongitude),
         distance: parseFloat(distance),
       });
-      setModalVisible(true);
+
+      Alert.alert('Success', 'Location updated successfully!');
     } catch (err) {
       setError('Failed to update fields: ' + err.message);
     }
+  };
+
+  const handleGetLocation = async () => {
+    setLoading(true); // Set loading to true when starting to fetch location
+    const location = await getLocation();
+    if (location) {
+      setClassLatitude(location.latitude.toString());
+      setClassLongitude(location.longitude.toString());
+    }
+    setLoading(false); // Set loading to false when done fetching location
   };
 
   if (loading) {
     return (
       <View style={[styles.container, styles.centerContent, isDark && styles.darkBackground]}>
         <ActivityIndicator size="large" color={isDark ? '#1E90FF' : '#0066cc'} />
-        <Text style={[styles.loadingText, isDark && styles.darkText]}>Loading...</Text>
+        <Text style={[styles.loadingText, isDark && styles.darkText]}>Fetching location...</Text>
       </View>
     );
   }
@@ -145,29 +187,15 @@ const SetLocation = () => {
           style={[styles.button, isDark && styles.darkButton]}
           onPress={handleUpdate}
         >
-          <Text style={[styles.buttonText, isDark && styles.darkButtonText]}>Update Location</Text>
+          <Text style={[styles.buttonText, isDark && styles.darkButtonText]}>   Update Location   </Text>
         </TouchableOpacity>
 
-        <Modal
-          transparent={true}
-          animationType="fade"
-          visible={modalVisible}
-          onRequestClose={() => setModalVisible(false)}
+        <TouchableOpacity
+          style={[styles.button, isDark && styles.darkButton]}
+          onPress={handleGetLocation}
         >
-          <View style={styles.modalContainer}>
-            <View style={[styles.modalContent, isDark && styles.darkModalContent]}>
-              <Text style={[styles.modalText, isDark && styles.darkText]}>
-                Location updated successfully!
-              </Text>
-              <TouchableOpacity
-                style={[styles.modalButton, isDark && styles.darkButton]}
-                onPress={() => setModalVisible(false)}
-              >
-                <Text style={[styles.modalButtonText, isDark && styles.darkButtonText]}>OK</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
+          <Text style={[styles.buttonText, isDark && styles.darkButtonText]}>Get Current Location</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
@@ -184,6 +212,9 @@ const styles = StyleSheet.create({
   },
   darkBackground: {
     backgroundColor: '#000000',
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
   },
   centerContent: {
     justifyContent: 'center',
@@ -256,38 +287,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 16,
     color: '#000000',
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    backgroundColor: '#ffffff',
-    padding: 20,
-    borderRadius: 8,
-    alignItems: 'center',
-    elevation: 5,
-  },
-  darkModalContent: {
-    backgroundColor: '#111111',
-  },
-  modalText: {
-    fontSize: 18,
-    marginBottom: 20,
-    textAlign: 'center',
-    color: '#000000',
-  },
-  modalButton: {
-    backgroundColor: '#0066cc',
-    padding: 10,
-    borderRadius: 5,
-  },
-  modalButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
 });
 

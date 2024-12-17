@@ -14,6 +14,7 @@ import * as Location from 'expo-location';
 import { firestore } from '@/src/firebase';
 import { collection, doc, getDocs, query, updateDoc, where } from 'firebase/firestore';
 import useUserDetails from '@/hooks/useUserDetails';
+import { DarkTheme, DefaultTheme, useTheme } from '@react-navigation/native';
 
 interface SubjectCardProps {
   subjectId: string;
@@ -41,32 +42,30 @@ export default function SubjectCard({
   const [totalCount, setTotalCount] = useState(0);
   const [attendanceMarked, setAttendanceMarked] = useState(false);
 
+  const { colors } = useTheme(); // Get current theme colors
+
   const classroomLocation = {
     latitude: 18.4583825,
     longitude: 73.8767101,
   };
+
   const checkAttendance = async (firestore, subjectId, currentUser, setAttendanceMarked) => {
     try {
-      // Create a query to fetch attendance documents with the matching lectureId
       const attendanceQuery = query(
         collection(firestore, 'attendance'),
         where('lectureId', '==', subjectId)
       );
-  
-      // Fetch the documents matching the query
+
       const querySnapshot = await getDocs(attendanceQuery);
-  
-      // Iterate over the fetched documents
+
       querySnapshot.forEach((doc) => {
         const data = doc.data();
-  
-        // Check if the students array exists and contains the current user's UID
+
         if (data.students) {
           const studentRecord = data.students.find(
             (student) => student.uid === currentUser.uid
           );
-  
-          // Check if the student's "present" field is true
+
           if (studentRecord && studentRecord.present) {
             setAttendanceMarked(true);
           }
@@ -76,8 +75,8 @@ export default function SubjectCard({
       console.error('Error checking attendance:', error);
     }
   };
-  checkAttendance(firestore,subjectId,currentUser,setAttendanceMarked);  
 
+  checkAttendance(firestore, subjectId, currentUser, setAttendanceMarked);
 
   const requestLocationPermission = async () => {
     if (Platform.OS === 'android') {
@@ -266,31 +265,38 @@ export default function SubjectCard({
   }, [subjectId]);
 
   return (
-    <View style={styles.card}>
-      <Text style={styles.subjectName}>{subjectName}</Text>
-      <Text style={styles.info}>Time: {startTime} - {endTime}</Text>
-      <Text style={styles.info}>Date: {date}</Text>
-      <Text style={styles.info}>Location: {location}</Text>
-      <Text style={styles.info}>Teacher: {teacherName}</Text>
-      <Text style={styles.attendance}>
+    <View style={[styles.card, { backgroundColor: colors.card }]}>
+      <Text style={[styles.subjectName, { color: colors.text }]}>{subjectName}</Text>
+      <Text style={[styles.info, { color: colors.text }]}>Time: {startTime} - {endTime}</Text>
+      <Text style={[styles.info, { color: colors.text }]}>Date: {date}</Text>
+      <Text style={[styles.info, { color: colors.text }]}>Location: {location}</Text>
+      <Text style={[styles.info, { color: colors.text }]}>Teacher: {teacherName}</Text>
+      <Text style={[styles.attendance, { color: colors.text }]}>
         Attendance: {presentCount}/{totalCount}
       </Text>
       {loading ? (
-        <ActivityIndicator size="large" color="#007AFF" />
-      ) : attendanceMarked ? (
-        <Text style={styles.markedText}>Attendance Marked</Text>
-      ) : (
-        <TouchableOpacity style={styles.button} onPress={markAttendance} disabled={attendanceMarked}>
-          <Text style={styles.buttonText}>Mark Attendance</Text>
-        </TouchableOpacity>
-      )}
+  <ActivityIndicator size="large" color={colors.primary} />
+) : attendanceMarked ? (
+  <Text style={[styles.markedText, { color: "#4CAF50" }]}>Attendance Marked</Text>
+) : currentUser?.role === "student" || currentUser?.role === "classRepresentative" ? (
+
+  <TouchableOpacity 
+    style={[styles.button, { backgroundColor: colors.primary }]} 
+    onPress={markAttendance} 
+    disabled={attendanceMarked} // Disables button if attendance is already marked
+  >
+    <Text style={[styles.buttonText, { color: colors.card }]}>Mark Attendance</Text>
+  </TouchableOpacity> 
+) : (
+  <Text style={[styles.markedText, { color: colors.notification }]}>Access Denied</Text>
+)}
+
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: 'white',
     borderRadius: 8,
     padding: 16,
     marginBottom: 20,
@@ -307,7 +313,6 @@ const styles = StyleSheet.create({
   },
   info: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 4,
   },
   attendance: {
@@ -317,20 +322,17 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   button: {
-    backgroundColor: '#007AFF',
     borderRadius: 8,
     padding: 12,
     alignItems: 'center',
   },
   buttonText: {
-    color: 'white',
     fontSize: 16,
     fontWeight: '600',
   },
   markedText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#28A745', // Green color to indicate success
     textAlign: 'center',
     marginTop: 8,
   },

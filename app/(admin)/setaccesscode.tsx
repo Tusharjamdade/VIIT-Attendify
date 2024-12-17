@@ -176,6 +176,9 @@ const styles = StyleSheet.create({
   },
   darkBackground: {
     backgroundColor: '#000000',
+    display:"flex",
+    justifyContent:"center",
+    alignItems:"center"
   },
   centerContent: {
     justifyContent: 'center',

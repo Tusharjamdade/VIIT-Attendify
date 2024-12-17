@@ -1,185 +1,178 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Button, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { Link } from 'expo-router';
-import firebase from "../src/firebase";
-import { SafeAreaView } from 'react-native-safe-area-context';
-export default function AttendanceScreen() {
-  const classes = [
-    { letter: 'M', subject: 'Mathematics I', time: '09:30 am', color: '#E3F2FD' },
-    { letter: 'P', subject: 'Physics', time: '10:40 am', color: '#E1F5FE' },
-    { letter: 'B', subject: 'Biology', time: '11:45 am', color: '#E0F2F1' },
-    { letter: 'G', subject: 'Geography', time: '12:10 am', color: '#F3E5F5' },
-  ];
-  const logout = async () => {
+import { useState } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+} from 'react-native';
+import { Picker } from '@react-native-picker/picker';
+import {
+  EnvelopeIcon,
+  LockClosedIcon,
+  UserIcon,
+  KeyIcon,
+  EyeIcon,
+  EyeSlashIcon,
+} from 'react-native-heroicons/outline';
+import { useRouter } from 'expo-router';
+import {
+  signInWithEmailAndPassword,
+} from 'firebase/auth';
+import { auth, firestore } from '@/src/firebase'; // Adjust path to your project structure
+import { doc, getDoc } from 'firebase/firestore';
+import useUserDetails from '@/hooks/useUserDetails';
+
+const Signin = () => {
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [role, setRole] = useState('student');
+  const [code, setCode] = useState('');
+  const {currnetUser} = useUserDetails();
+  const router = useRouter();
+    if(currnetUser){
+      router.replace({ pathname: '/(tabs)/subject' });
+    }
+  const validateRoleCode = () => {
+    if (role === 'class_representative' && code !== 'cr@123') return false;
+    if (role === 'faculty' && code !== 'fa@123') return false;
+    if (role === 'admin' && code !== 'ad@123') return false;
+    return true;
+  };
+
+  const handleSignIn = async () => {
+    if (role !== 'student' && !validateRoleCode()) {
+      Alert.alert('Error', 'Invalid code for the selected role.');
+      return;
+    }
+
     try {
-      // await firebase.auth().signOut();
-      
-      Alert.alert('Logged out successfully!');
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Fetch user role from Firestore
+      const userDoc = await getDoc(doc(firestore, 'users', user.uid));
+      if (!userDoc.exists()) {
+        throw new Error('User data not found');
+      }
+
+      const userData = userDoc.data();
+      if (userData.role !== role) {
+        throw new Error(`Role mismatch: Expected ${userData.role}, but selected ${role}`);
+      }
+
+      console.log('Sign-in successful');
+      Alert.alert('Success', 'Sign-in successful!');
+      router.replace({ pathname: '/(tabs)/home' });
     } catch (error) {
-      Alert.alert('Error', error.message);
+      console.error('Error signing in:', error);
+      Alert.alert('Sign-in Failed', error.message);
     }
   };
-  
+
   return (
-    <SafeAreaView style={styles.container}>
-    <ScrollView style={styles.container}>
-      {/* <View style={styles.header}>
-        <Ionicons name="home-outline" size={24} color="#000" />
-        <Text style={styles.headerTitle}>Attendity</Text>
+    <ScrollView
+      contentContainerStyle={{ flexGrow: 1, marginTop: 120, alignItems: 'center' }}
+      className="flex-1 bg-gray-100 p-6"
+    >
+      <View className="items-center mb-8 mt-10">
+        <Text className="text-4xl font-bold text-gray-800">Welcome Back!</Text>
+        <Text className="text-lg text-gray-600 mt-2 text-center">
+          Sign in to access your account
+        </Text>
       </View>
 
-      <View style={styles.profileSection}>
-        <Image
-          source={{ uri: '../images/image.png' }}
-          style={styles.avatar}
+      <View className="flex-row items-center w-full h-12 bg-white rounded-lg px-4 mb-4 shadow-md">
+        <EnvelopeIcon size={20} color="#6B7280" />
+        <TextInput
+          placeholder="Enter your email"
+          keyboardType="email-address"
+          className="flex-1 ml-2 text-gray-700"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
         />
-        <Text style={styles.email}>sakshichoudhary@email.com</Text>
       </View>
 
-      <View style={styles.welcomeSection}>
-        <Text style={styles.welcomeTitle}>Hi, Sakshi.</Text>
-        <Text style={styles.welcomeSubtitle}>Welcome to your Class</Text>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Today's Classes</Text>
-        <Ionicons name="chevron-forward" size={24} color="#000" />
-      </View>
-
-      <View style={styles.classesContainer}>
-        {classes.map((item, index) => (
-          <View key={index} style={styles.classItem}>
-            <View style={[styles.letterCircle, { backgroundColor: item.color }]}>
-              <Text style={styles.letterText}>{item.letter}</Text>
-            </View>
-            <View style={styles.classInfo}>
-              <Text style={styles.subjectText}>{item.subject}</Text>
-              <Text style={styles.timeText}>{item.time}</Text>
-            </View>
-          </View>
-        ))}
-      </View>
-
-      {['Check Attendance Report', 'Faculty Details', 'Class Details'].map((item, index) => (
-        <TouchableOpacity key={index} style={styles.section}>
-          <Text style={styles.sectionTitle}>{item}</Text>
-          <Ionicons name="chevron-forward" size={24} color="#000" />
+      <View className="flex-row items-center w-full h-12 bg-white rounded-lg px-4 mb-4 shadow-md">
+        <LockClosedIcon size={20} color="#6B7280" />
+        <TextInput
+          placeholder="Enter your password"
+          secureTextEntry={!showPassword}
+          className="flex-1 ml-2 text-gray-700"
+          value={password}
+          onChangeText={setPassword}
+        />
+        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+          {showPassword ? (
+            <EyeSlashIcon size={20} color="#6B7280" />
+          ) : (
+            <EyeIcon size={20} color="#6B7280" />
+          )}
         </TouchableOpacity>
-      ))} */}
-      <Link href={"/home"}>Home</Link>
-      <Link href={"/subject"}>subject</Link>
-      <Link href={"/signin"}>Signin</Link>
-      <Link href={"/signup"}>Signup</Link>
-      <Link href={"/(card)/facerec"}>face</Link>
-     
-      <Button title="Logout" onPress={logout} />
+      </View>
+
+      <View className="flex-row items-center w-full bg-white rounded-lg mb-4 shadow-md">
+        <View className="px-4">
+          <UserIcon size={20} color="#6B7280" />
+        </View>
+        <View className="flex-1">
+          <Picker
+            selectedValue={role}
+            onValueChange={(itemValue) => setRole(itemValue)}
+            style={{ height: 48 }}
+          >
+            <Picker.Item label="Student" value="student" />
+            <Picker.Item label="Class Representative" value="class_representative" />
+            <Picker.Item label="Faculty" value="faculty" />
+            <Picker.Item label="Admin" value="admin" />
+          </Picker>
+        </View>
+      </View>
+
+      {role !== 'student' && (
+        <View className="flex-row items-center w-full h-12 bg-white rounded-lg px-4 mb-4 shadow-md">
+          <KeyIcon size={20} color="#6B7280" />
+          <TextInput
+            placeholder="Enter your role code"
+            className="flex-1 ml-2 text-gray-700"
+            value={code}
+            onChangeText={setCode}
+          />
+        </View>
+      )}
+
+      <TouchableOpacity
+        className="w-full h-12 bg-blue-500 rounded-lg items-center justify-center mb-6 shadow-md"
+        onPress={handleSignIn}
+      >
+        <Text className="text-white font-semibold text-lg">Sign In</Text>
+      </TouchableOpacity>
+      <View className="flex-row items-center mb-6">
+        <View className="flex-1 h-px bg-gray-300" />
+        <Text className="mx-4 text-gray-500">or</Text>
+        <View className="flex-1 h-px bg-gray-300" />
+      </View>
+
+      {/* Sign Up Link */}
+      <View className="flex-row items-center mt-2">
+        <Text className="text-gray-700">
+          Don't have an account?{' '}
+        </Text>
+        <TouchableOpacity
+          onPress={() => router.push({
+            pathname:"/(auth)/signup"
+          })} 
+        >
+          <Text className="text-blue-500 font-semibold">Sign Up</Text>
+        </TouchableOpacity>
+      </View>
 
     </ScrollView>
-    </SafeAreaView>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    gap: 12,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  profileSection: {
-    padding: 16,
-    gap: 8,
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-  },
-  email: {
-    fontSize: 14,
-    color: '#666',
-  },
-  welcomeSection: {
-    padding: 16,
-    gap: 4,
-  },
-  welcomeTitle: {
-    fontSize: 32,
-    fontWeight: '600',
-  },
-  welcomeSubtitle: {
-    fontSize: 20,
-    color: '#64B5F6',
-  },
-  section: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '500',
-  },
-  classesContainer: {
-    padding: 16,
-    gap: 12,
-  },
-  classItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  letterCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  letterText: {
-    fontSize: 18,
-    fontWeight: '500',
-  },
-  classInfo: {
-    flex: 1,
-  },
-  subjectText: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  timeText: {
-    fontSize: 14,
-    color: '#666',
-  },
-});
-
-
-
-// import { initializeApp } from "firebase/app";
-// // TODO: Add SDKs for Firebase products that you want to use
-// // https://firebase.google.com/docs/web/setup#available-libraries
-
-// // Your web app's Firebase configuration
-// const firebaseConfig = {
-//   apiKey: "AIzaSyAR0kqtOfhnPVWV34bgCeMkNRRpkYo-nak",
-//   authDomain: "attendify-by-tushar.firebaseapp.com",
-//   projectId: "attendify-by-tushar",
-//   storageBucket: "attendify-by-tushar.firebasestorage.app",
-//   messagingSenderId: "880770431995",
-//   appId: "1:880770431995:web:2e338f3945e16bd534695e"
-// };
-
-// // Initialize Firebase
-// const app = initializeApp(firebaseConfig);
+export default Signin;

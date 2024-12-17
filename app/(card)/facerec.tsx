@@ -166,188 +166,200 @@
 
 
 // FaceRecognitionPage.js
-import React, { useEffect, useState, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Image,
-  Platform,
-  NativeEventEmitter,
-} from 'react-native';
-import {
-  FaceRecognitionSdkView,
-  FaceSDKModule,
-} from 'face-recognition-sdk';
-import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
-import { useIsFocused } from '@react-navigation/native';
+// import React, { useEffect, useState, useRef } from 'react';
+// import {
+//   View,
+//   Text,
+//   StyleSheet,
+//   TouchableOpacity,
+//   Image,
+//   Platform,
+//   NativeEventEmitter,
+// } from 'react-native';
+// import {
+//   FaceRecognitionSdkView,
+//   FaceSDKModule,
+// } from 'face-recognition-sdk';
+// import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
+// import { useIsFocused } from '@react-navigation/native';
 
-const cameraPermission = Platform.select({
-  ios: PERMISSIONS.IOS.CAMERA,
-  android: PERMISSIONS.ANDROID.CAMERA,
-});
+// const cameraPermission = Platform.select({
+//   ios: PERMISSIONS.IOS.CAMERA,
+//   android: PERMISSIONS.ANDROID.CAMERA,
+// });
 
-const FaceRecognitionPage = ({ navigation, route }) => {
-  const { persons } = route.params;
-  const [faces, setFaces] = useState([]);
-  const [cameraShow, setCameraShow] = useState(false);
-  const isFocused = useIsFocused();
-  const sdkViewRef = useRef(null);
+// const FaceRecognitionPage = ({ navigation, route }) => {
+//   const { persons } = route.params;
+//   const [faces, setFaces] = useState([]);
+//   const [cameraShow, setCameraShow] = useState(false);
+//   const isFocused = useIsFocused();
+//   const sdkViewRef = useRef(null);
 
-  let recognized = false;
+//   let recognized = false;
 
-  useEffect(() => {
-    checkPermission();
-    const eventEmitter = new NativeEventEmitter(FaceSDKModule);
-    const eventListener = eventEmitter.addListener('onFaceDetected', (event) => {
-      setFaces(event);
-      if (!recognized) identifyPerson(event);
-    });
+//   useEffect(() => {
+//     checkPermission();
+//     const eventEmitter = new NativeEventEmitter(FaceSDKModule);
+//     const eventListener = eventEmitter.addListener('onFaceDetected', (event) => {
+//       setFaces(event);
+//       if (!recognized) identifyPerson(event);
+//     });
 
-    return () => {
-      eventListener.remove();
-    };
-  }, [isFocused]);
+//     return () => {
+//       eventListener.remove();
+//     };
+//   }, [isFocused]);
 
-  useEffect(() => {
-    if (isFocused) {
-      startCamera();
-    } else {
-      stopCamera();
-    }
-    return () => {
-      if (isFocused) stopCamera();
-    };
-  }, [isFocused]);
+//   useEffect(() => {
+//     if (isFocused) {
+//       startCamera();
+//     } else {
+//       stopCamera();
+//     }
+//     return () => {
+//       if (isFocused) stopCamera();
+//     };
+//   }, [isFocused]);
 
-  const startCamera = async () => {
-    await FaceSDKModule.startCamera();
-  };
+//   const startCamera = async () => {
+//     await FaceSDKModule.startCamera();
+//   };
 
-  const stopCamera = async () => {
-    await FaceSDKModule.stopCamera();
-  };
+//   const stopCamera = async () => {
+//     await FaceSDKModule.stopCamera();
+//   };
 
-  const checkPermission = async () => {
-    const permissionStatus = await check(cameraPermission);
-    handlePermissionStatus(permissionStatus);
-  };
+//   const checkPermission = async () => {
+//     const permissionStatus = await check(cameraPermission);
+//     handlePermissionStatus(permissionStatus);
+//   };
 
-  const requestPermission = async () => {
-    const permissionStatus = await request(cameraPermission);
-    handlePermissionStatus(permissionStatus);
-  };
+//   const requestPermission = async () => {
+//     const permissionStatus = await request(cameraPermission);
+//     handlePermissionStatus(permissionStatus);
+//   };
 
-  const handlePermissionStatus = (status) => {
-    switch (status) {
-      case RESULTS.GRANTED:
-        setCameraShow(true);
-        break;
-      case RESULTS.DENIED:
-        requestPermission();
-        break;
-      default:
-        setCameraShow(false);
-    }
-  };
+//   const handlePermissionStatus = (status) => {
+//     switch (status) {
+//       case RESULTS.GRANTED:
+//         setCameraShow(true);
+//         break;
+//       case RESULTS.DENIED:
+//         requestPermission();
+//         break;
+//       default:
+//         setCameraShow(false);
+//     }
+//   };
 
-  const identifyPerson = async (curFaces) => {
-    let maxSimilarity = -1;
-    let maxSimilarityName = '';
-    let maxLiveness = -1;
-    let enrolledFace, identifiedFace;
+//   const identifyPerson = async (curFaces) => {
+//     let maxSimilarity = -1;
+//     let maxSimilarityName = '';
+//     let maxLiveness = -1;
+//     let enrolledFace, identifiedFace;
 
-    if (curFaces.length > 0) {
-      const face = curFaces[0];
-      for (const person of persons) {
-        try {
-          const similarity = await FaceSDKModule.similarityCalculation(
-            face.templates,
-            person.templates
-          );
-          if (similarity > maxSimilarity) {
-            maxSimilarity = similarity;
-            maxSimilarityName = person.name;
-            maxLiveness = face.liveness;
-            identifiedFace = face.faceJpg;
-            enrolledFace = person.faceJpg;
-          }
-        } catch (error) {
-          console.error('Error calculating similarity:', error);
-        }
-      }
-    }
+//     if (curFaces.length > 0) {
+//       const face = curFaces[0];
+//       for (const person of persons) {
+//         try {
+//           const similarity = await FaceSDKModule.similarityCalculation(
+//             face.templates,
+//             person.templates
+//           );
+//           if (similarity > maxSimilarity) {
+//             maxSimilarity = similarity;
+//             maxSimilarityName = person.name;
+//             maxLiveness = face.liveness;
+//             identifiedFace = face.faceJpg;
+//             enrolledFace = person.faceJpg;
+//           }
+//         } catch (error) {
+//           console.error('Error calculating similarity:', error);
+//         }
+//       }
+//     }
 
-    if (maxSimilarity > 0.8 && maxLiveness > 0.7) {
-      recognized = true;
-      navigation.replace('Result', {
-        enrolledFace,
-        identifiedFace,
-        maxSimilarityName,
-        maxSimilarity,
-        maxLiveness,
-      });
-      setFaces([]);
-    }
-  };
+//     if (maxSimilarity > 0.8 && maxLiveness > 0.7) {
+//       recognized = true;
+//       navigation.replace('Result', {
+//         enrolledFace,
+//         identifiedFace,
+//         maxSimilarityName,
+//         maxSimilarity,
+//         maxLiveness,
+//       });
+//       setFaces([]);
+//     }
+//   };
 
-  const FacePainter = ({ faces }) => {
-    const renderFaces = () => {
-      return faces.map((face, index) => {
-        const isRealFace = face.liveness >= 0.7;
-        const rectStyle = isRealFace ? styles.realFaceRect : styles.spoofFaceRect;
-        const textStyle = isRealFace ? styles.realFaceText : styles.spoofFaceText;
-        return (
-          <React.Fragment key={index}>
-            <Text style={[styles.faceText, textStyle]}>{`${
-              isRealFace ? 'Real' : 'Spoof'
-            } ${face.liveness}`}</Text>
-            <View style={[styles.faceRect, rectStyle]} />
-          </React.Fragment>
-        );
-      });
-    };
+//   const FacePainter = ({ faces }) => {
+//     const renderFaces = () => {
+//       return faces.map((face, index) => {
+//         const isRealFace = face.liveness >= 0.7;
+//         const rectStyle = isRealFace ? styles.realFaceRect : styles.spoofFaceRect;
+//         const textStyle = isRealFace ? styles.realFaceText : styles.spoofFaceText;
+//         return (
+//           <React.Fragment key={index}>
+//             <Text style={[styles.faceText, textStyle]}>{`${
+//               isRealFace ? 'Real' : 'Spoof'
+//             } ${face.liveness}`}</Text>
+//             <View style={[styles.faceRect, rectStyle]} />
+//           </React.Fragment>
+//         );
+//       });
+//     };
 
-    return <View style={styles.faceOverlay}>{renderFaces()}</View>;
-  };
+//     return <View style={styles.faceOverlay}>{renderFaces()}</View>;
+//   };
 
+//   return (
+//     <View style={styles.container}>
+//       <View style={styles.appBar}>
+//         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+//           <Text style={styles.backText}>Back</Text>
+//         </TouchableOpacity>
+//         <Text style={styles.title}>Face Recognition</Text>
+//       </View>
+//       <View style={styles.body}>
+//         {cameraShow ? (
+//           <FaceRecognitionSdkView ref={sdkViewRef} style={styles.cameraView} />
+//         ) : (
+//           <Text style={styles.errorText}>Camera permission issue.</Text>
+//         )}
+//         <FacePainter faces={faces} />
+//       </View>
+//     </View>
+//   );
+// };
+
+// const styles = StyleSheet.create({
+//   container: { flex: 1, backgroundColor: '#1C1B1F' },
+//   appBar: { height: 60, backgroundColor: '#1C1B1F', flexDirection: 'row', alignItems: 'center' },
+//   backButton: { padding: 10 },
+//   backText: { color: '#FFF' },
+//   title: { color: '#FFF', fontSize: 18, marginLeft: 20 },
+//   body: { flex: 1, position: 'relative' },
+//   cameraView: { flex: 1 },
+//   errorText: { color: '#FFF', textAlign: 'center', marginTop: 20 },
+//   faceOverlay: { ...StyleSheet.absoluteFillObject },
+//   faceRect: { position: 'absolute', borderWidth: 2 },
+//   realFaceRect: { borderColor: '#00FF00' },
+//   spoofFaceRect: { borderColor: '#FF0000' },
+//   faceText: { position: 'absolute', fontSize: 16 },
+//   realFaceText: { color: '#00FF00' },
+//   spoofFaceText: { color: '#FF0000' },
+// });
+
+// export default FaceRecognitionPage;
+import { View, Text } from 'react-native'
+import React from 'react'
+
+const facerec = () => {
   return (
-    <View style={styles.container}>
-      <View style={styles.appBar}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Text style={styles.backText}>Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Face Recognition</Text>
-      </View>
-      <View style={styles.body}>
-        {cameraShow ? (
-          <FaceRecognitionSdkView ref={sdkViewRef} style={styles.cameraView} />
-        ) : (
-          <Text style={styles.errorText}>Camera permission issue.</Text>
-        )}
-        <FacePainter faces={faces} />
-      </View>
+    <View>
+      <Text>facerec</Text>
     </View>
-  );
-};
+  )
+}
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#1C1B1F' },
-  appBar: { height: 60, backgroundColor: '#1C1B1F', flexDirection: 'row', alignItems: 'center' },
-  backButton: { padding: 10 },
-  backText: { color: '#FFF' },
-  title: { color: '#FFF', fontSize: 18, marginLeft: 20 },
-  body: { flex: 1, position: 'relative' },
-  cameraView: { flex: 1 },
-  errorText: { color: '#FFF', textAlign: 'center', marginTop: 20 },
-  faceOverlay: { ...StyleSheet.absoluteFillObject },
-  faceRect: { position: 'absolute', borderWidth: 2 },
-  realFaceRect: { borderColor: '#00FF00' },
-  spoofFaceRect: { borderColor: '#FF0000' },
-  faceText: { position: 'absolute', fontSize: 16 },
-  realFaceText: { color: '#00FF00' },
-  spoofFaceText: { color: '#FF0000' },
-});
-
-export default FaceRecognitionPage;
+export default facerec

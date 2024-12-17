@@ -6,12 +6,12 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
-  Button,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs, updateDoc } from 'firebase/firestore';
 import { firestore } from '@/src/firebase';
 import useUserDetails from '@/hooks/useUserDetails';
+import { DarkTheme, DefaultTheme, useTheme } from '@react-navigation/native';
 
 interface Student {
   id: string;
@@ -27,8 +27,9 @@ interface Lecture {
 
 export default function StudentList({ lecture }: { lecture: Lecture }) {
   const [students, setStudents] = useState<Student[]>([]);
-  const [loadingg, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const { currentUser } = useUserDetails();
+  const { colors } = useTheme();
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -86,9 +87,9 @@ export default function StudentList({ lecture }: { lecture: Lecture }) {
       const attendanceSnapshot = await getDocs(attendanceQuery);
 
       if (!attendanceSnapshot.empty) {
-        const attendanceDoc = attendanceSnapshot.docs[0].ref; // Get the reference to the matching document
+        const attendanceDoc = attendanceSnapshot.docs[0].ref;
 
-        const updatedStudents = students.map(({ id, ...rest }) => rest); // Remove unique ID
+        const updatedStudents = students.map(({ id, ...rest }) => rest);
         await updateDoc(attendanceDoc, { students: updatedStudents });
         alert('Attendance updated successfully!');
       } else {
@@ -103,32 +104,36 @@ export default function StudentList({ lecture }: { lecture: Lecture }) {
   const renderItem = ({ item }: { item: Student }) => (
     <TouchableOpacity
       onPress={() => toggleAttendance(item.id)}
-      style={styles.studentItem}
-      disabled={currentUser.role === 'student'} // Disable toggle for students
+      style={[styles.studentItem, { backgroundColor: colors.card }]}
+      disabled={currentUser.role === 'student'}
     >
       <View style={styles.studentInfo}>
-        <Text style={styles.rollNumber}>{String(item.rollNo).padStart(3, '0')}</Text>
-        <Text style={styles.studentName}>{`${item.firstName} ${item.lastName}`}</Text>
+        <Text style={[styles.rollNumber, { color: colors.text }]}>
+          {String(item.rollNo).padStart(3, '0')}
+        </Text>
+        <Text style={[styles.studentName, { color: colors.text }]}>
+          {`${item.firstName} ${item.lastName}`}
+        </Text>
       </View>
       <Feather
         name={item.present ? 'check-circle' : 'x-circle'}
         size={24}
-        color={item.present ? '#4CAF50' : '#F44336'}
+        color={item.present ? colors.primary : colors.notification}
       />
     </TouchableOpacity>
   );
 
-  if (loadingg) {
+  if (loading) {
     return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
+      <View style={[styles.loaderContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Student List</Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Text style={[styles.title, { color: colors.text }]}>Student List</Text>
       {students.length > 0 ? (
         <FlatList
           data={students}
@@ -137,10 +142,19 @@ export default function StudentList({ lecture }: { lecture: Lecture }) {
           contentContainerStyle={styles.listContent}
         />
       ) : (
-        <Text style={styles.noStudentsText}>No students found for this lecture.</Text>
+        <Text style={[styles.noStudentsText, { color: colors.text }]}>
+          No students found for this lecture.
+        </Text>
       )}
       {(currentUser.role === 'faculty' || currentUser.role === 'admin') && (
-        <Button title="Update Attendance" onPress={updateAttendance} color="#007AFF" />
+        <TouchableOpacity
+          style={[styles.updateButton, { backgroundColor: colors.primary }]}
+          onPress={updateAttendance}
+        >
+          <Text style={[styles.updateButtonText, { color: colors.background }]}>
+            Update Attendance
+          </Text>
+        </TouchableOpacity>
       )}
     </View>
   );
@@ -150,7 +164,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#f8f8f8',
   },
   title: {
     fontSize: 20,
@@ -164,7 +177,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#fff',
     borderRadius: 8,
     padding: 12,
     marginBottom: 8,
@@ -194,8 +206,18 @@ const styles = StyleSheet.create({
   },
   noStudentsText: {
     fontSize: 16,
-    color: '#555',
     textAlign: 'center',
     marginTop: 20,
   },
+  updateButton: {
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  updateButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 });
+

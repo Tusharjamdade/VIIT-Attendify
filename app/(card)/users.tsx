@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, FlatList, StyleSheet } from 'react-native';
+import { View, Text, Image, FlatList, StyleSheet, useColorScheme } from 'react-native';
 import { collection, getDocs } from 'firebase/firestore';
 import { firestore } from '@/src/firebase'; // Adjust this import based on your project structure
 
@@ -17,9 +17,10 @@ interface User {
 
 interface UserCardProps {
   user: User;
+  isDarkMode: boolean;
 }
 
-const UserCard: React.FC<UserCardProps> = ({ user }) => {
+const UserCard: React.FC<UserCardProps> = ({ user, isDarkMode }) => {
   const imageMap = {
     boy1: require('@/assets/images/boy1.jpg'),
     boy2: require('@/assets/images/boy2.jpg'),
@@ -36,14 +37,21 @@ const UserCard: React.FC<UserCardProps> = ({ user }) => {
   const userImage = user.image && imageMap[user.image] ? imageMap[user.image] : defaultPhoto;
 
   return (
-    <View style={styles.card}>
+    <View style={[
+      styles.card,
+      isDarkMode ? styles.cardDark : styles.cardLight
+    ]}>
       <Image source={userImage} style={styles.photo} />
       <View style={styles.info}>
-        <Text style={styles.name}>
+        <Text style={[styles.name, isDarkMode ? styles.textDark : styles.textLight]}>
           {user.firstName} {user.lastName}
         </Text>
-        <Text style={styles.email}>{user.email}</Text>
-        <Text style={styles.role}>{user.role}</Text>
+        <Text style={[styles.email, isDarkMode ? styles.textDark : styles.textLight]}>
+          {user.email}
+        </Text>
+        <Text style={[styles.role, isDarkMode ? styles.textDark : styles.textLight]}>
+          {user.role}
+        </Text>
       </View>
     </View>
   );
@@ -52,6 +60,7 @@ const UserCard: React.FC<UserCardProps> = ({ user }) => {
 const UsersPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const isDarkMode = useColorScheme() === 'dark';
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -78,24 +87,23 @@ const UsersPage: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <Text>Loading...</Text>
+      <View style={[styles.loadingContainer, isDarkMode ? styles.containerDark : styles.containerLight]}>
+        <Text style={isDarkMode ? styles.textDark : styles.textLight}>Loading...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      {/* Add introductory text */}
-      <Text style={styles.headerText}>Meet Our Team</Text>
-      <Text style={styles.subText}>
+    <View style={[styles.container, isDarkMode ? styles.containerDark : styles.containerLight]}>
+      <Text style={[styles.headerText, isDarkMode ? styles.textDark : styles.textLight]}>Meet Our Team</Text>
+      <Text style={[styles.subText, isDarkMode ? styles.textDark : styles.textLight]}>
         Here's a list of all the amazing people who are part of our organization.
       </Text>
 
       <FlatList
         data={users}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <UserCard user={item} />}
+        renderItem={({ item }) => <UserCard user={item} isDarkMode={isDarkMode} />}
         contentContainerStyle={styles.listContent}
       />
     </View>
@@ -105,13 +113,17 @@ const UsersPage: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9f9f9', // Neutral light background
+  },
+  containerLight: {
+    backgroundColor: '#f9f9f9',
+  },
+  containerDark: {
+    backgroundColor: '#000',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f9f9f9',
   },
   headerText: {
     fontSize: 24,
@@ -119,25 +131,29 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 20,
     marginBottom: 10,
-    color: '#333',
   },
   subText: {
     fontSize: 16,
     textAlign: 'center',
     marginBottom: 20,
-    color: '#555',
   },
   listContent: {
     padding: 16,
   },
   card: {
     flexDirection: 'row',
-    backgroundColor: '#ffffff', // Simple white for cards
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#ddd', // Neutral border for contrast
+  },
+  cardLight: {
+    backgroundColor: '#ffffff',
+    borderColor: '#ddd',
+  },
+  cardDark: {
+    backgroundColor: '#1a1a1a',
+    borderColor: '#333',
   },
   photo: {
     width: 60,
@@ -161,6 +177,12 @@ const styles = StyleSheet.create({
   role: {
     fontSize: 14,
     fontWeight: '500',
+  },
+  textLight: {
+    color: '#333',
+  },
+  textDark: {
+    color: '#f9f9f9',
   },
 });
 

@@ -8,22 +8,32 @@ import {
   ScrollView,
   Alert,
   RefreshControl,
-  useColorScheme,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FontAwesome5 } from '@expo/vector-icons'; // For sun and moon icons
 import { updateDoc, doc } from 'firebase/firestore';
-import { firestore } from '@/src/firebase';
+import { auth, firestore } from '@/src/firebase';
 import useUserDetails from '@/hooks/useUserDetails';
-import Icon from 'react-native-vector-icons/FontAwesome';
+import { signOut } from 'firebase/auth';
+import { router, useRouter } from 'expo-router';
+import { DarkTheme, DefaultTheme, useTheme } from '@react-navigation/native';
 
 const Profile = () => {
-  const isDark = useColorScheme() === 'dark'; 
+  const router = useRouter();
+  const { colors } = useTheme();
   const { currentUser, loading: userLoading, error } = useUserDetails();
   const [selectedImage, setSelectedImage] = useState(null);
   const [rollNo, setRollNo] = useState('');
   const [imageChanged, setImageChanged] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+      router.replace({ pathname: "/(auth)/signin" });
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
+  };
 
   const profileImages = [
     { name: 'boy1', source: require('@/assets/images/boy1.jpg') },
@@ -75,52 +85,39 @@ const Profile = () => {
     }
   };
 
-  const bgColor = isDark ? '#121212' : '#F7FAFC';
-  const textColor = isDark ? '#E2E8F0' : '#2D3748';
-  const inputBgColor = isDark ? '#2D3748' : '#FFFFFF';
-  const buttonBgColor = isDark ? '#4A5568' : '#E2E8F0';
-  const buttonTextColor = isDark ? '#E2E8F0' : '#2D3748';
-
   if (userLoading) {
     return (
-      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: bgColor }}>
-        <Text style={{ color: textColor }}>Loading...</Text>
+      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
+        <Text style={{ color: colors.text }}>Loading...</Text>
       </SafeAreaView>
     );
   }
 
   if (error) {
     return (
-      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: bgColor }}>
-        <Text style={{ color: 'red' }}>Error: {error.message}</Text>
+      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
+        <Text style={{ color: colors.error }}>Error: {error.message}</Text>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, flexDirection: 'column' }}>
       <ScrollView
         style={{ flex: 1, padding: 16 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
-        <View style={[styles.header, { backgroundColor: isDark ? '#121212' : '#FFFFFF' }]}>
-          <Icon name="user" size={24} color={isDark ? '#2F80ED' : '#2F80ED'} />
-          <Text style={[styles.headerTitle, { color: isDark ? '#FFFFFF' : '#2F80ED' }]}>Profile</Text>
-        </View>
-
-        {/* Profile Image Section */}
         <View style={{ alignItems: 'center', marginBottom: 24 }}>
           <Image
             source={
               selectedImage !== null
                 ? profileImages[selectedImage].source
-                : require('@/assets/images/boy1.jpg') // Fallback image
+                : require('@/assets/images/boy1.jpg')
             }
             style={{ width: 140, height: 140, borderRadius: 80 }}
           />
         </View>
 
-        {/* Image Selector */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
           {profileImages.map((image, index) => (
             <TouchableOpacity key={index} onPress={() => selectImage(index)} style={{ marginRight: 8 }}>
@@ -131,29 +128,27 @@ const Profile = () => {
                   height: 70,
                   borderRadius: 40,
                   borderWidth: selectedImage === index ? 2 : 0,
-                  borderColor: 'blue',
+                  borderColor: colors.primary,
                 }}
               />
             </TouchableOpacity>
           ))}
         </ScrollView>
 
-        {/* Save Button */}
         {imageChanged && (
           <TouchableOpacity
             onPress={saveChanges}
             style={{
-              backgroundColor: buttonBgColor,
+              backgroundColor: colors.primary,
               padding: 12,
               borderRadius: 8,
               marginBottom: 16,
             }}
           >
-            <Text style={{ color: buttonTextColor, textAlign: 'center', fontWeight: '600' }}>Save Changes</Text>
+            <Text style={{ color: colors.background, textAlign: 'center', fontWeight: '600' }}>Save Changes</Text>
           </TouchableOpacity>
         )}
 
-        {/* User Details Form */}
         {currentUser && [
           { label: 'First Name', value: currentUser.firstName, editable: false },
           { label: 'Last Name', value: currentUser.lastName, editable: false },
@@ -162,15 +157,14 @@ const Profile = () => {
           { label: 'Class', value: 'Computer Science and Engineering (Data Science)', editable: false },
         ].map(({ label, value, editable }, index) => (
           <View style={{ marginBottom: 24 }} key={index}>
-            <Text style={{ color: textColor, marginBottom: 8 }}>{label}</Text>
+            <Text style={{ color: colors.text, marginBottom: 8 }}>{label}</Text>
             <TextInput
               value={value}
               onChangeText={editable ? setRollNo : undefined}
-              
               editable={editable}
               style={{
-                backgroundColor: inputBgColor,
-                color: textColor,
+                backgroundColor: colors.card,
+                color: colors.text,
                 padding: 12,
                 borderRadius: 8,
               }}
@@ -178,21 +172,32 @@ const Profile = () => {
           </View>
         ))}
       </ScrollView>
+      <View style={{ padding: 16, marginTop: 'auto', justifyContent: 'flex-end' }}>
+  <TouchableOpacity
+    onPress={handleLogout}
+    style={{
+      backgroundColor: "red", // Red for a logout button
+      paddingVertical: 10,
+      paddingHorizontal: 4,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+      elevation: 4, // Shadow effect for better visibility
+      shadowColor: colors.text,
+      shadowOpacity: 0.2,
+      shadowRadius: 6,
+      shadowOffset: { width: 0, height: 3 },
+    }}
+  >
+    <Text style={{ color: colors.background, fontSize: 18, fontWeight: '600' }}>
+      Logout
+    </Text>
+  </TouchableOpacity>
+</View>
+
     </SafeAreaView>
   );
 };
 
-const styles = {
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    gap: 12,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-};
-
 export default Profile;
+
