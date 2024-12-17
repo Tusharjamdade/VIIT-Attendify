@@ -76,10 +76,10 @@ const Home = () => {
     { title: "Download", icon: "download", path: "/downloadattendance" },
     { title: "Users", icon: "user", path: "/users" },
     { title: "Settings", icon: "settings", path: "/settings" },
-    { title: "Logout", icon: "log-out", path: "/logout" },
+    { title: "Location", icon: "location-outline", path: "/setlocation" },
     { title: "Help", icon: "help-circle", path: "/faq" },
     { title: "Notifications", icon: "bell", path: "/notifications" },
-    { title: "Messages", icon: "message-square", path: "/messages" },
+    { title: "Access Code", icon: "message-square", path: "/setaccesscode" },
   ];
 
   const imageMap = {

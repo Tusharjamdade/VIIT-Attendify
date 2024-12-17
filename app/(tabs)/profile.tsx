@@ -166,6 +166,7 @@ const Profile = () => {
             <TextInput
               value={value}
               onChangeText={editable ? setRollNo : undefined}
+              
               editable={editable}
               style={{
                 backgroundColor: inputBgColor,
