@@ -58,6 +58,7 @@ const UserCard: React.FC<UserCardProps> = ({ user, isDarkMode }) => {
 };
 
 const UsersPage: React.FC = () => {
+  console.log("User")
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const isDarkMode = useColorScheme() === 'dark';

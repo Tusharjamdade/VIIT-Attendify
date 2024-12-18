@@ -19,6 +19,7 @@ import useUserDetails from '@/hooks/useUserDetails';
 import { DarkTheme, DefaultTheme, useTheme } from '@react-navigation/native';
 
 const Subject = () => {
+  console.log("Subject")
   const router = useRouter();
   const { colors } = useTheme();
   const { currentUser, loading: userLoading, error, refetch } = useUserDetails();
@@ -33,6 +34,7 @@ const Subject = () => {
     return `${day}-${month}-${year}`;
   }
 
+  
   const fetchLectures = async () => {
     try {
       const today = new Date();

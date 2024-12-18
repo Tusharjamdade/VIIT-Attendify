@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -23,18 +23,39 @@ import {
 import { auth, firestore } from '../../src/firebase'; // Adjust path to your project structure
 import { doc, getDoc } from 'firebase/firestore';
 
-const Signin = ({navigation}) => {
+const Signin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState('student');
   const [code, setCode] = useState('');
+  const [codes, setCodes] = useState(null); // To store role codes
   const router = useRouter();
 
+  useEffect(() => {
+    // Fetch access codes on component mount
+    const fetchCodes = async () => {
+      try {
+        const docRef = doc(firestore, "accessCode", "nv8grcC0Y9XWjjhGEL02");
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setCodes(docSnap.data());
+        } else {
+          console.error("No access code document found.");
+        }
+      } catch (error) {
+        console.error("Error fetching access codes:", error);
+      }
+    };
+
+    fetchCodes();
+  }, []);
+
   const validateRoleCode = () => {
-    if (role === 'class_representative' && code !== 'cr@123') return false;
-    if (role === 'faculty' && code !== 'fa@123') return false;
-    if (role === 'admin' && code !== 'ad@123') return false;
+    if (!codes) return false; // Ensure codes are loaded
+    if (role === 'classRepresentative' && code !== codes.classRepresentative) return false;
+    if (role === 'faculty' && code !== codes.faculty) return false;
+    if (role === 'admin' && code !== codes.admin) return false;
     return true;
   };
 
@@ -61,13 +82,13 @@ const Signin = ({navigation}) => {
 
       console.log('Sign-in successful');
       Alert.alert('Success', 'Sign-in successful!');
-      router.replace({ pathname: '/(tabs)/subject' });
+      router.replace('/(tabs)/subject');
     } catch (error) {
       console.error('Error signing in:', error);
       Alert.alert('Sign-in Failed', error.message);
     }
   };
-
+  console.log("Signin")
   return (
     <ScrollView
       contentContainerStyle={{ flexGrow: 1, marginTop: 120, alignItems: 'center' }}
@@ -121,7 +142,7 @@ const Signin = ({navigation}) => {
             style={{ height: 48 }}
           >
             <Picker.Item label="Student" value="student" />
-            <Picker.Item label="Class Representative" value="class_representative" />
+            <Picker.Item label="Class Representative" value="classRepresentative" />
             <Picker.Item label="Faculty" value="faculty" />
             <Picker.Item label="Admin" value="admin" />
           </Picker>
@@ -146,24 +167,17 @@ const Signin = ({navigation}) => {
       >
         <Text className="text-white font-semibold text-lg">Sign In</Text>
       </TouchableOpacity>
-      <View className="flex-row items-center mb-6">
-        <View className="flex-1 h-px bg-gray-300" />
-        <Text className="mx-4 text-gray-500">or</Text>
-        <View className="flex-1 h-px bg-gray-300" />
-      </View>
 
-      {/* Sign Up Link */}
       <View className="flex-row items-center mt-2">
         <Text className="text-gray-700">
           Don't have an account?{' '}
         </Text>
         <TouchableOpacity
-          onPress={() => navigation.navigate("Signup")} 
+          onPress={() => router.push('/signup')} // Use router instead of navigation
         >
           <Text className="text-blue-500 font-semibold">Sign Up</Text>
         </TouchableOpacity>
       </View>
-
     </ScrollView>
   );
 };

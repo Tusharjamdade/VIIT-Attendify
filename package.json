@@ -108,7 +108,6 @@
     "react-native-svg": "^15.10.1",
     "react-native-vector-icons": "^10.2.0",
     "react-native-vision-camera": "^4.6.3",
-    "react-native-vision-camera-face-detector": "^1.7.2",
     "react-native-web": "~0.19.13",
     "react-native-webview": "13.12.5",
     "victory-native": "^41.14.0"

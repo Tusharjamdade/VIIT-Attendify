@@ -29,13 +29,14 @@ const DownloadAttendance = () => {
   const [lectures, setLectures] = useState([]);
   const { currentUser, refetch } = useUserDetails();
   const { colors } = useTheme();
-
+  console.log("Download")
   useEffect(() => {
     if (currentUser) {
       fetchLectures();
     }
   }, [currentUser]);
 
+  
   const fetchLectures = async () => {
     try {
       setLoading(true);

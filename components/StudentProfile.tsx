@@ -12,6 +12,7 @@ export default function StudentProfile() {
     boy3: require('@/assets/images/boy3.jpg'),
     boy4: require('@/assets/images/boy4.png'),
     boy5: require('@/assets/images/boy5.jpg'),
+    default: require('@/assets/images/default.jpg'),
     girl1: require('@/assets/images/girl1.jpg'),
     girl2: require('@/assets/images/girl2.jpg'),
     girl3: require('@/assets/images/girl3.jpg'),
@@ -19,7 +20,7 @@ export default function StudentProfile() {
     girl5: require('@/assets/images/girl5.jpg'),
   };
 
-  const imageUrl = currentUser?.image ? imageMap[currentUser.image] : require('@/assets/images/default.jpg');
+  const imageUrl = currentUser?.image ? imageMap[currentUser.image] : null;
 
   const styles = StyleSheet.create({
     container: {
@@ -54,7 +55,7 @@ export default function StudentProfile() {
 
   return (
     <View style={styles.container}>
-      <Image source={imageUrl} style={styles.image} />
+      <Image source={imageUrl || require('@/assets/images/default.jpg')} style={styles.image} />
       <View style={styles.textContainer}>
         <Text style={styles.name}>{currentUser?.firstName} {currentUser?.lastName}</Text>
         <Text style={styles.role}>{currentUser?.email}</Text>

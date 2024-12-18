@@ -4,14 +4,14 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  TouchableOpacity,
   ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { collection, query, where, getDocs, updateDoc } from 'firebase/firestore';
+import { useTheme } from '@react-navigation/native';
 import { firestore } from '@/src/firebase';
+import { collection, query, where, getDocs, updateDoc } from 'firebase/firestore';
 import useUserDetails from '@/hooks/useUserDetails';
-import { DarkTheme, DefaultTheme, useTheme } from '@react-navigation/native';
 
 interface Student {
   id: string;
@@ -132,46 +132,45 @@ export default function StudentList({ lecture }: { lecture: Lecture }) {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Text style={[styles.title, { color: colors.text }]}>Student List</Text>
-      {students.length > 0 ? (
-        <FlatList
-          data={students}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
-        />
-      ) : (
+    <FlatList
+      data={students}
+      renderItem={renderItem}
+      keyExtractor={(item) => item.id}
+      contentContainerStyle={[styles.listContent, { backgroundColor: colors.background }]}
+      nestedScrollEnabled
+      ListHeaderComponent={
+        <Text style={[styles.title, { color: colors.text }]}>Student List</Text>
+      }
+      ListEmptyComponent={
         <Text style={[styles.noStudentsText, { color: colors.text }]}>
           No students found for this lecture.
         </Text>
-      )}
-      {(currentUser.role === 'faculty' || currentUser.role === 'admin') && (
-        <TouchableOpacity
-          style={[styles.updateButton, { backgroundColor: colors.primary }]}
-          onPress={updateAttendance}
-        >
-          <Text style={[styles.updateButtonText, { color: colors.background }]}>
-            Update Attendance
-          </Text>
-        </TouchableOpacity>
-      )}
-    </View>
+      }
+      ListFooterComponent={
+        (currentUser.role === 'faculty' || currentUser.role === 'admin') && (
+          <TouchableOpacity
+            style={[styles.updateButton, { backgroundColor: colors.primary }]}
+            onPress={updateAttendance}
+          >
+            <Text style={[styles.updateButtonText, { color: colors.background }]}>
+              Update Attendance
+            </Text>
+          </TouchableOpacity>
+        )
+      }
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  listContent: {
+    paddingBottom: 20,
     padding: 16,
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 12,
-  },
-  listContent: {
-    paddingBottom: 20,
   },
   studentItem: {
     flexDirection: 'row',
@@ -220,4 +219,3 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-

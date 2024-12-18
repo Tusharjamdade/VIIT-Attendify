@@ -33,7 +33,9 @@ const Card = ({ title, icon, onPress, textColor, backgroundColor }) => (
   </TouchableOpacity>
 );
 
+
 const Home = () => {
+  console.log("Home")
   const { currentUser, loading, error, refetch } = useUserDetails();
   const [refreshing, setRefreshing] = React.useState(false);
   const { colors } = useTheme();

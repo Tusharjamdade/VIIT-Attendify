@@ -63,7 +63,7 @@ export default function SubjectCard({
 
         if (data.students) {
           const studentRecord = data.students.find(
-            (student) => student.uid === currentUser.uid
+            (student) => student?.uid === currentUser?.uid
           );
 
           if (studentRecord && studentRecord.present) {
@@ -198,7 +198,7 @@ export default function SubjectCard({
       querySnapshot.forEach(async (docSnapshot) => {
         const attendanceDoc = docSnapshot.data();
         const studentIndex = attendanceDoc.students.findIndex(
-          (student) => student.uid === currentUser?.uid && !student.present
+          (student) => student?.uid === currentUser?.uid && !student.present
         );
 
         if (studentIndex !== -1) {
@@ -250,7 +250,7 @@ export default function SubjectCard({
           setTotalCount(total);
 
           const currentStudent = attendanceDoc.students.find(
-            (student) => student.uid === currentUser?.uid
+            (student) => student?.uid === currentUser?.uid
           );
           if (currentStudent?.present) {
             setAttendanceMarked(true);

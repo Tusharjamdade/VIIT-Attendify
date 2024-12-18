@@ -62,7 +62,7 @@ const SupportPage = () => {
       setIsSubmitting(false);
     }
   };
-
+  console.log("Support")
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.infoSection, { backgroundColor: colors.card }]}>

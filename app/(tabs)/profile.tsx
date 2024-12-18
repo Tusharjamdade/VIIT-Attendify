@@ -34,13 +34,15 @@ const Profile = () => {
       console.error("Error during logout:", error);
     }
   };
-
+  
+  console.log("Profile")
   const profileImages = [
     { name: 'boy1', source: require('@/assets/images/boy1.jpg') },
     { name: 'boy2', source: require('@/assets/images/boy2.jpg') },
     { name: 'boy3', source: require('@/assets/images/boy3.jpg') },
     { name: 'boy4', source: require('@/assets/images/boy4.png') },
     { name: 'boy5', source: require('@/assets/images/boy5.jpg') },
+    { name: 'default', source: require('@/assets/images/default.jpg') },
     { name: 'girl1', source: require('@/assets/images/girl1.jpg') },
     { name: 'girl2', source: require('@/assets/images/girl2.jpg') },
     { name: 'girl3', source: require('@/assets/images/girl3.jpg') },

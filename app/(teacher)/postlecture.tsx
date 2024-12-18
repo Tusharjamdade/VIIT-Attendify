@@ -20,6 +20,7 @@ import { DarkTheme, DefaultTheme, useTheme } from '@react-navigation/native';
 const subjects = ['Mathematics', 'Science', 'History', 'Literature', 'Physics', 'Chemistry', 'Biology'];
 
 export default function PostLecturePage() {
+  console.log("Postlecture")
   const [subject, setSubject] = useState(subjects[0]);
   const [startTime, setStartTime] = useState(new Date());
   const [endTime, setEndTime] = useState(new Date());
@@ -33,6 +34,7 @@ export default function PostLecturePage() {
   const [loading, setLoading] = useState(true);
   const { colors, dark } = useTheme(); // Fetching colors and theme status
 
+  
   const fetchCurrentUserDetails = async () => {
     try {
       const user = auth.currentUser;

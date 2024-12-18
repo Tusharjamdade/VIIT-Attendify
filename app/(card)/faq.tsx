@@ -24,7 +24,7 @@ const FAQItem = ({ question, answer, theme }) => {
     </View>
   );
 };
-
+console.log("FAQ")
 const FAQ = () => {
   const faqs = [
     {

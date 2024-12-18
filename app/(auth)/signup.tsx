@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -25,7 +25,7 @@ import {
   sendEmailVerification,
   signOut,
 } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { router, useNavigation } from 'expo-router';
 
 const Signup = ({navigation}) => {
@@ -39,13 +39,35 @@ const Signup = ({navigation}) => {
   const [code, setCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [codes, setCodes] = useState(null); // To store role codes
 
-  const validateRoleCode = () => {
-    if (role === 'class_representative' && code !== 'cr@123') return false;
-    if (role === 'faculty' && code !== 'fa@123') return false;
-    if (role === 'admin' && code !== 'ad@123') return false;
-    return true;
-  };
+
+   useEffect(() => {
+     // Fetch access codes on component mount
+     const fetchCodes = async () => {
+       try {
+         const docRef = doc(firestore, "accessCode", "nv8grcC0Y9XWjjhGEL02");
+         const docSnap = await getDoc(docRef);
+         if (docSnap.exists()) {
+           setCodes(docSnap.data());
+         } else {
+           console.error("No access code document found.");
+         }
+       } catch (error) {
+         console.error("Error fetching access codes:", error);
+       }
+     };
+ 
+     fetchCodes();
+   }, []);
+ 
+   const validateRoleCode = () => {
+     if (!codes) return false; // Ensure codes are loaded
+     if (role === 'classRepresentative' && code !== codes.classRepresentative) return false;
+     if (role === 'faculty' && code !== codes.faculty) return false;
+     if (role === 'admin' && code !== codes.admin) return false;
+     return true;
+   };
 
   function formatDate(date) {
     const day = String(date.getDate()).padStart(2, '0'); // Ensures two digits
@@ -119,7 +141,7 @@ const Signup = ({navigation}) => {
             role,
             password,
             createdAt: formatDate(new Date()),
-            ...(role === "student" && { rollNo }), // Conditionally add rollNo if role is "student"
+            ...((role === "student" || role === "classRepresentative") && { rollNo }), // Conditionally add rollNo if role is "student"
           };
           await setDoc(userDocRef, userData);
           Alert.alert('Success', 'Account created successfully after verification!');
@@ -138,7 +160,8 @@ const Signup = ({navigation}) => {
     const numericValue = text.replace(/[^0-9]/g, ""); // Remove non-numeric characters
     setRollNo(numericValue);
   };
-
+  
+  console.log("Signup")
   return (
     <ScrollView   contentContainerStyle={{ flexGrow: 1, marginTop: 20, alignItems: 'center' }}
     className="flex-1 bg-gray-100 p-6">
@@ -229,14 +252,14 @@ const Signup = ({navigation}) => {
           style={{ height: 48, flex: 1 }}
         >
           <Picker.Item label="Student" value="student" />
-          <Picker.Item label="Class Representative" value="class_representative" />
+          <Picker.Item label="Class Representative" value="classRepresentative" />
           <Picker.Item label="Faculty" value="faculty" />
           <Picker.Item label="Admin" value="admin" />
         </Picker>
       </View>
 
       {/* Roll No */}
-      {(role == "student" || role == "class_representative") && (
+      {(role == "student" || role == "classRepresentative") && (
         <View className="flex-row items-center w-full h-12 bg-white rounded-lg px-4 mb-4 shadow-md">
           <IdentificationIcon size={20} color="#6B7280" />
           <TextInput
