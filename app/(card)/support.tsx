@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Alert, TextInput, TouchableOpacity, useColorScheme } from 'react-native';
+import { View, Text, StyleSheet, Alert, TextInput, TouchableOpacity } from 'react-native';
 import { collection, addDoc } from 'firebase/firestore';
 import { firestore } from '../../src/firebase';
 import useUserDetails from '@/hooks/useUserDetails';
@@ -18,7 +18,7 @@ const SupportPage = () => {
   // Update user details from currentUser
   useEffect(() => {
     if (currentUser) {
-      setFirstName(currentUser.firstName +" "+currentUser.lastName || '');
+      setFirstName(currentUser.firstName + " " + currentUser.lastName || '');
       setEmail(currentUser.email || '');
     }
   }, [currentUser]);
@@ -39,7 +39,7 @@ const SupportPage = () => {
       // Data to store
       const supportData = {
         firstName,
-        lastName,
+        lastName: currentUser.lastName,
         image: currentUser.image,
         uid: currentUser.uid,
         email,
@@ -62,53 +62,64 @@ const SupportPage = () => {
       setIsSubmitting(false);
     }
   };
-  console.log("Support")
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.infoSection, { backgroundColor: colors.card }]}>
-        <Text style={[styles.infoText, { color: colors.text }]}>
-          Your feedback and reports help us improve our app. Please let us know how we can assist you!
-        </Text>
-      </View>
+      <View style={[styles.innerContainer, { backgroundColor: colors.background }]}>
+      <View style={{ alignItems: 'center', justifyContent: 'center', marginVertical: 16 }}>
+  <Text style={[styles.infoText, { fontWeight: 'bold', fontSize: 18, color: colors.text }]}>
+    Your feedback matters!!
+  </Text>
+</View>
 
-      <View style={[styles.form, { backgroundColor: colors.card }]}>
-        <TextInput
-          style={[styles.input, styles.disabledInput, { backgroundColor: colors.border, color: colors.text }]}
-          value={firstName}
-          editable={false}
-          placeholder="Name"
-        />
-        <TextInput
-          style={[styles.input, styles.disabledInput, { backgroundColor: colors.border, color: colors.text }]}
-          value={email}
-          editable={false}
-          placeholder="Email"
-        />
-        <TextInput
-          style={[styles.input, { color: colors.text }]}
-          value={subject}
-          onChangeText={setSubject}
-          placeholder="Subject"
-          placeholderTextColor={colors.placeholder}
-        />
-        <TextInput
-          style={[styles.input, styles.textArea, { color: colors.text }]}
-          value={description}
-          onChangeText={setDescription}
-          placeholder="Description"
-          placeholderTextColor={colors.placeholder}
-          multiline
-          numberOfLines={4}
-        />
-        <TouchableOpacity
-          style={[styles.button, isSubmitting && styles.disabledButton, { backgroundColor: colors.primary }]}
-          onPress={handleSubmit}
-          disabled={isSubmitting}
-        >
-          <Text style={styles.buttonText}>
-            {isSubmitting ? 'Submitting...' : 'Submit'}
-          </Text>
-        </TouchableOpacity>
+<View style={[styles.infoSection, { backgroundColor: colors.card }]}>
+  <Text style={[styles.infoText, { color: colors.text }]}>
+    Your feedback and reports help us improve our app. Please let us know how we can assist you!
+  </Text>
+</View>
+
+
+        <View style={[styles.form, { backgroundColor: colors.card }]}>
+          <TextInput
+            style={[styles.input, styles.disabledInput, { backgroundColor: colors.border, color: colors.text }]}
+            value={firstName}
+            editable={false}
+            placeholder="Name"
+            placeholderTextColor={colors.text}
+          />
+          <TextInput
+            style={[styles.input, styles.disabledInput, { backgroundColor: colors.border, color: colors.text }]}
+            value={email}
+            editable={false}
+            placeholder="Email"
+            placeholderTextColor={colors.text}
+          />
+          <TextInput
+            style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+            value={subject}
+            onChangeText={setSubject}
+            placeholder="Subject"
+            placeholderTextColor={colors.text}
+          />
+          <TextInput
+            style={[styles.input, styles.textArea, { color: colors.text, borderColor: colors.border }]}
+            value={description}
+            onChangeText={setDescription}
+            placeholder="Description"
+            placeholderTextColor={colors.text}
+            multiline
+            numberOfLines={10}
+          />
+          <TouchableOpacity
+            style={[styles.button, isSubmitting && styles.disabledButton, { backgroundColor: colors.primary, borderRadius: 14 }]}
+            onPress={handleSubmit}
+            disabled={isSubmitting}
+          >
+            <Text style={[styles.buttonText, { color: colors.card }]}>
+              {isSubmitting ? 'Submitting...' : 'Submit'}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -117,6 +128,13 @@ const SupportPage = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    justifyContent: 'center', // Center the content vertically
+    alignItems: 'center', // Center the content horizontally
+    padding: 16,
+  },
+  innerContainer: {
+    width: '100%',
+    maxWidth: 600, // Limiting the width for better appearance on large screens
     padding: 16,
   },
   infoSection: {
@@ -139,7 +157,6 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: '#E2E8F0',
     borderRadius: 4,
     padding: 12,
     marginBottom: 16,
@@ -158,10 +175,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   disabledButton: {
-    backgroundColor: '#A0AEC0',
+    opacity: 0.7,
   },
   buttonText: {
-    color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
   },

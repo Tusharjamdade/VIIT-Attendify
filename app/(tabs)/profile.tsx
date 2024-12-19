@@ -29,7 +29,7 @@ const Profile = () => {
   const handleLogout = async () => {
     try {
       await auth.signOut();
-      router.replace({ pathname: "/(auth)/signin" });
+      router.replace({ pathname: "/" });
     } catch (error) {
       console.error("Error during logout:", error);
     }
@@ -114,9 +114,9 @@ const Profile = () => {
             source={
               selectedImage !== null
                 ? profileImages[selectedImage].source
-                : require('@/assets/images/boy1.jpg')
+                : require('@/assets/images/default.jpg')
             }
-            style={{ width: 140, height: 140, borderRadius: 80 }}
+            style={{ width: 140, height: 140, borderRadius: 80 ,borderColor:colors.primary,borderWidth:3}}
           />
         </View>
 
@@ -167,7 +167,7 @@ const Profile = () => {
               style={{
                 backgroundColor: colors.card,
                 color: colors.text,
-                padding: 12,
+                padding: 14,
                 borderRadius: 8,
               }}
             />

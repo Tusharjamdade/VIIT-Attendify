@@ -66,7 +66,7 @@ export default function StudentList({ lecture }: { lecture: Lecture }) {
     };
 
     fetchStudents();
-  }, [lecture.id]);
+  }, [lecture.id]);  // Dependency array makes sure it runs once per lecture
 
   const toggleAttendance = (id: string) => {
     if (currentUser.role === 'faculty' || currentUser.role === 'admin') {
@@ -89,6 +89,7 @@ export default function StudentList({ lecture }: { lecture: Lecture }) {
       if (!attendanceSnapshot.empty) {
         const attendanceDoc = attendanceSnapshot.docs[0].ref;
 
+        // Prepare the updated students data
         const updatedStudents = students.map(({ id, ...rest }) => rest);
         await updateDoc(attendanceDoc, { students: updatedStudents });
         alert('Attendance updated successfully!');

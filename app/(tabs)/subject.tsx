@@ -5,7 +5,6 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
@@ -13,28 +12,24 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { firestore } from '../../src/firebase';
-import { deleteDoc, doc, collection, query, where, getDocs } from 'firebase/firestore';
-import { deleteUser, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import useUserDetails from '@/hooks/useUserDetails';
-import { DarkTheme, DefaultTheme, useTheme } from '@react-navigation/native';
+import { useTheme } from '@react-navigation/native';
 
 const Subject = () => {
-  console.log("Subject")
   const router = useRouter();
   const { colors } = useTheme();
   const { currentUser, loading: userLoading, error, refetch } = useUserDetails();
   const [lectures, setLectures] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
 
-  function formatDate(date: Date): string {
+  const formatDate = (date: Date): string => {
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
     return `${day}-${month}-${year}`;
-  }
+  };
 
-  
   const fetchLectures = async () => {
     try {
       const today = new Date();
@@ -62,7 +57,7 @@ const Subject = () => {
 
   useEffect(() => {
     fetchLectures();
-  }, []);
+  }, []); // Empty dependency array ensures this effect only runs once on mount
 
   const handleSubjectPress = (subjectDetails) => {
     router.push({
@@ -114,7 +109,7 @@ const Subject = () => {
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
             <Image
               source={imageUrl || require('@/assets/images/default.jpg')}
-              style={{ width: 80, height: 80, borderRadius: 40,borderColor: colors.primary ,borderWidth: 3 }}
+              style={{ width: 80, height: 80, borderRadius: 40, borderColor: colors.primary, borderWidth: 3 }}
             />
             <View style={{ marginLeft: 16 }}>
               <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.text }}>
@@ -200,4 +195,3 @@ const Subject = () => {
 };
 
 export default Subject;
-

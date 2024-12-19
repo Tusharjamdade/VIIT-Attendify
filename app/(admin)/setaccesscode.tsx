@@ -57,7 +57,7 @@ const SetLocation = () => {
         return;
       }
 
-      const docRef = doc(firestore, 'classLocation', 'U6rrz1w3nuVE9rla9vUf');
+      const docRef = doc(firestore, 'accessCode', 'nv8grcC0Y9XWjjhGEL02');
       await updateDoc(docRef, {
         classRepresentative,
         faculty,

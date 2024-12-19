@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, Dimensions, useColorScheme } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, Dimensions } from 'react-native';
 import { PieChart } from 'react-native-chart-kit';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import StudentProfile from '@/components/StudentProfile';
@@ -19,6 +19,9 @@ const AttendanceReport = () => {
   const { colors } = useTheme();
 
   useEffect(() => {
+    // Ensure the user is valid before attempting to fetch attendance
+    if (!currentUser || !currentUser.uid) return;
+
     const fetchAttendance = async () => {
       try {
         const attendanceRef = collection(firestore, 'attendance');
@@ -46,7 +49,7 @@ const AttendanceReport = () => {
     };
 
     fetchAttendance();
-  }, [currentUser]);
+  }, [currentUser]); // Only trigger effect when currentUser changes
 
   if (loading) {
     return (
@@ -128,7 +131,7 @@ const AttendanceReport = () => {
 
         {/* Encouragement Message */}
         <Text style={[styles.encouragementText, { color: colors.primary }]}>
-        Great Job, Keep It Up!
+          Great Job, Keep It Up!
         </Text>
       </ScrollView>
     </SafeAreaView>

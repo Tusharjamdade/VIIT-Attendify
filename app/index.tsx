@@ -6,72 +6,64 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  StyleSheet,
 } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
-import {
-  EnvelopeIcon,
-  LockClosedIcon,
-  UserIcon,
-  KeyIcon,
-  EyeIcon,
-  EyeSlashIcon,
-} from 'react-native-heroicons/outline';
+import { EnvelopeIcon, LockClosedIcon, EyeIcon, EyeSlashIcon } from 'react-native-heroicons/outline';
 import { useRouter } from 'expo-router';
 import {
   signInWithEmailAndPassword,
+  onAuthStateChanged,
+  setPersistence,
+  browserLocalPersistence,
+  signOut,
 } from 'firebase/auth';
-import { auth, firestore } from '@/src/firebase'; // Adjust path to your project structure
+import { auth, firestore } from '@/src/firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import { useTheme } from '@react-navigation/native';
 
 const Signin = () => {
-  console.log("Index")
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState('student');
-  const [code, setCode] = useState('');
-  const [codes, setCodes] = useState(null); // To store role codes
   const router = useRouter();
+  const { colors } = useTheme();
 
-  
   useEffect(() => {
-    // Fetch access codes on component mount
-    const fetchCodes = async () => {
+    const setUserPersistence = async () => {
       try {
-        const docRef = doc(firestore, "accessCode", "nv8grcC0Y9XWjjhGEL02");
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setCodes(docSnap.data());
-        } else {
-          console.error("No access code document found.");
-        }
+        await setPersistence(auth, browserLocalPersistence); // Ensures persistence across sessions
       } catch (error) {
-        console.error("Error fetching access codes:", error);
+        console.error('Error setting persistence:', error);
       }
     };
 
-    fetchCodes();
+    setUserPersistence();
+
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          // Force refresh token on auth state change
+          await user.getIdToken(true); // This forces the token to refresh
+          router.replace('/(tabs)/home');
+        } catch (error) {
+          console.error('Error refreshing token:', error);
+          handleSignOut();
+        }
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  const validateRoleCode = () => {
-    if (!codes) return false; // Ensure codes are loaded
-    if (role === 'classRepresentative' && code !== codes.classRepresentative) return false;
-    if (role === 'faculty' && code !== codes.faculty) return false;
-    if (role === 'admin' && code !== codes.admin) return false;
-    return true;
-  };
-
   const handleSignIn = async () => {
-    if (role !== 'student' && !validateRoleCode()) {
-      Alert.alert('Error', 'Invalid code for the selected role.');
-      return;
-    }
-
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Fetch user role from Firestore
+      // Ensure token is fresh after sign-in
+      await user.getIdToken(true); // Force refresh token
+
       const userDoc = await getDoc(doc(firestore, 'users', user.uid));
       if (!userDoc.exists()) {
         throw new Error('User data not found');
@@ -84,100 +76,156 @@ const Signin = () => {
 
       console.log('Sign-in successful');
       Alert.alert('Success', 'Sign-in successful!');
-      router.replace('/(tabs)/subject');
+      router.replace('/(tabs)/home');
     } catch (error) {
-      console.error('Error signing in:', error);
-      Alert.alert('Sign-in Failed', error.message);
+      if (error.code === 'auth/user-token-expired') {
+        Alert.alert('Session Expired', 'Your session has expired. Please log in again.');
+        handleSignOut();
+      } else {
+        console.error('Error signing in:', error);
+        Alert.alert('Sign-in Failed', error.message);
+      }
     }
   };
 
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth); // Sign out the user
+      router.replace('/signin'); // Redirect to sign-in page
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  const styles = StyleSheet.create({
+    container: {
+      flexGrow: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: colors.background,
+      paddingHorizontal: 16,
+      paddingVertical: 32,
+    },
+    title: {
+      fontSize: 32,
+      fontWeight: 'bold',
+      color: colors.text,
+      marginBottom: 12,
+    },
+    subtitle: {
+      fontSize: 18,
+      color: colors.text,
+      marginBottom: 24,
+      textAlign: 'center',
+    },
+    inputContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      width: '100%',
+      height: 48,
+      backgroundColor: colors.card,
+      borderRadius: 8,
+      paddingHorizontal: 16,
+      marginBottom: 16,
+    },
+    input: {
+      flex: 1,
+      marginLeft: 8,
+      color: colors.text,
+      height: 48, // Ensures the input takes full height of the container
+    },
+    button: {
+      width: '100%',
+      height: 48,
+      backgroundColor: colors.primary,
+      borderRadius: 8,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 24,
+    },
+    buttonText: {
+      color: '#FFFFFF',
+      fontSize: 18,
+      fontWeight: 'bold',
+    },
+    linkContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    linkText: {
+      color: colors.text,
+    },
+    link: {
+      color: colors.primary,
+      fontWeight: 'bold',
+    },
+    iconButton: {
+      marginLeft: 8,
+    },
+  });
+
   return (
-    <ScrollView
-      contentContainerStyle={{ flexGrow: 1, marginTop: 120, alignItems: 'center' }}
-      className="flex-1 bg-gray-100 p-6"
-    >
-      <View className="items-center mb-8 mt-10">
-        <Text className="text-4xl font-bold text-gray-800">Welcome Back!</Text>
-        <Text className="text-lg text-gray-600 mt-2 text-center">
-          Sign in to access your account
-        </Text>
+    <ScrollView contentContainerStyle={styles.container}>
+      <View style={{ alignItems: 'center', marginBottom: 32 }}>
+        <Text style={styles.title}>Welcome Back!</Text>
+        <Text style={styles.subtitle}>Sign in to access your account</Text>
       </View>
 
-      <View className="flex-row items-center w-full h-12 bg-white rounded-lg px-4 mb-4 shadow-md">
-        <EnvelopeIcon size={20} color="#6B7280" />
+      {/* Email Input */}
+      <View style={styles.inputContainer}>
+        <EnvelopeIcon size={20} color={colors.text} />
         <TextInput
           placeholder="Enter your email"
+          placeholderTextColor={colors.text + '80'}
           keyboardType="email-address"
-          className="flex-1 ml-2 text-gray-700"
+          style={styles.input}
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
         />
       </View>
 
-      <View className="flex-row items-center w-full h-12 bg-white rounded-lg px-4 mb-4 shadow-md">
-        <LockClosedIcon size={20} color="#6B7280" />
+      {/* Password Input */}
+      <View style={styles.inputContainer}>
+        <LockClosedIcon size={20} color={colors.text} />
         <TextInput
           placeholder="Enter your password"
+          placeholderTextColor={colors.text + '80'}
           secureTextEntry={!showPassword}
-          className="flex-1 ml-2 text-gray-700"
+          style={styles.input}
           value={password}
           onChangeText={setPassword}
         />
-        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+        <TouchableOpacity
+          style={styles.iconButton}
+          onPress={() => setShowPassword(!showPassword)}
+        >
           {showPassword ? (
-            <EyeSlashIcon size={20} color="#6B7280" />
+            <EyeSlashIcon size={20} color={colors.text} />
           ) : (
-            <EyeIcon size={20} color="#6B7280" />
+            <EyeIcon size={20} color={colors.text} />
           )}
         </TouchableOpacity>
       </View>
 
-      <View className="flex-row items-center w-full bg-white rounded-lg mb-4 shadow-md">
-        <View className="px-4">
-          <UserIcon size={20} color="#6B7280" />
-        </View>
-        <View className="flex-1">
-          <Picker
-            selectedValue={role}
-            onValueChange={(itemValue) => setRole(itemValue)}
-            style={{ height: 48 }}
-          >
-            <Picker.Item label="Student" value="student" />
-            <Picker.Item label="Class Representative" value="classRepresentative" />
-            <Picker.Item label="Faculty" value="faculty" />
-            <Picker.Item label="Admin" value="admin" />
-          </Picker>
-        </View>
-      </View>
-
-      {role !== 'student' && (
-        <View className="flex-row items-center w-full h-12 bg-white rounded-lg px-4 mb-4 shadow-md">
-          <KeyIcon size={20} color="#6B7280" />
-          <TextInput
-            placeholder="Enter your role code"
-            className="flex-1 ml-2 text-gray-700"
-            value={code}
-            onChangeText={setCode}
-          />
-        </View>
-      )}
-
-      <TouchableOpacity
-        className="w-full h-12 bg-blue-500 rounded-lg items-center justify-center mb-6 shadow-md"
-        onPress={handleSignIn}
-      >
-        <Text className="text-white font-semibold text-lg">Sign In</Text>
+      {/* Sign In Button */}
+      <TouchableOpacity style={styles.button} onPress={handleSignIn}>
+        <Text style={styles.buttonText}>Sign In</Text>
       </TouchableOpacity>
 
-      <View className="flex-row items-center mt-2">
-        <Text className="text-gray-700">
-          Don't have an account?{' '}
-        </Text>
-        <TouchableOpacity
-          onPress={() => router.push('/signup')} // Use router instead of navigation
-        >
-          <Text className="text-blue-500 font-semibold">Sign Up</Text>
+      {/* OR Divider */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 24 }}>
+        <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
+        <Text style={{ marginHorizontal: 12, color: colors.text }}>or</Text>
+        <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
+      </View>
+
+      {/* Sign Up Link */}
+      <View style={styles.linkContainer}>
+        <Text style={styles.linkText}>Don't have an account? </Text>
+        <TouchableOpacity onPress={() => router.push('/signup')}>
+          <Text style={styles.link}>Sign Up</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>

@@ -27,7 +27,7 @@ export default function StudentProfile() {
       flexDirection: 'row',
       alignItems: 'center',
       marginBottom: 20,
-      backgroundColor: isDarkMode ? '#000' : '#E6F7FF', // Solid black for dark, light blue for light
+      backgroundColor: isDarkMode ? '#000' : 'white', 
       padding: 16,
       borderRadius: 8,
     },

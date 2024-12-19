@@ -40,10 +40,19 @@ const DownloadAttendance = () => {
   const fetchLectures = async () => {
     try {
       setLoading(true);
-      const lecturesQuery = query(
-        collection(firestore, 'lectures'),
-        where('userId', '==', currentUser.uid)
-      );
+      let lecturesQuery;
+
+      // Check if the user is a class representative or admin
+      if (currentUser?.role === 'classRepresentative' || currentUser?.role === 'admin') {
+        // If the user is a class representative or admin, fetch all lectures
+        lecturesQuery = query(collection(firestore, 'lectures'));
+      } else {
+        // Otherwise, fetch lectures for the current user's userId
+        lecturesQuery = query(
+          collection(firestore, 'lectures'),
+          where('userId', '==', currentUser.uid)
+        );
+      }
       const lectureSnapshot = await getDocs(lecturesQuery);
       const lecturesData = lectureSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setLectures(lecturesData);

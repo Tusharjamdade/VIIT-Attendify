@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, Image, ScrollView, ActivityIndicator, TouchableOpacity, Dimensions, RefreshControl } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -33,18 +33,19 @@ const Card = ({ title, icon, onPress, textColor, backgroundColor }) => (
   </TouchableOpacity>
 );
 
-
 const Home = () => {
-  console.log("Home")
   const { currentUser, loading, error, refetch } = useUserDetails();
-  const [refreshing, setRefreshing] = React.useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const { colors } = useTheme();
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await refetch();
-    setRefreshing(false);
-  };
+  // Avoid unnecessary re-renders by using useCallback
+  const onRefresh = useCallback(async () => {
+    if (!refreshing) {
+      setRefreshing(true);
+      await refetch();
+      setRefreshing(false);
+    }
+  }, [refreshing, refetch]);
 
   if (loading) {
     return (
@@ -69,33 +70,33 @@ const Home = () => {
     { title: "Attendance", icon: "user-check", path: "/attendance" },
     { title: "Download", icon: "download", path: "/downloadattendance" },
     { title: "Users", icon: "users", path: "/users" },
-    { title: "Schedule", icon: "calendar", path: "/" },
-    { title: "Support", icon: "help-circle", path: "/support" },
-    { title: "Support Requests", icon: "message-square", path: "/supportRequests" },
-    { title: "Settings", icon: "settings", path: "/settings" },
-    { title: "Help", icon: "help-circle", path: "/faq" },
-    { title: "Notifications", icon: "bell", path: "/notifications" },
+    // { title: "Schedule", icon: "calendar", path: "/" },
+    { title: "Support", icon: "shield", path: "/support" },
+    { title: "Support Requests", icon: "bell", path: "/supportRequests" },
+    // { title: "Settings", icon: "settings", path: "/settings" },
+    { title: "FAQ", icon: "question-circle", path: "/faq" },
+    // { title: "Notifications", icon: "bell", path: "/notifications" },
   ];
 
   // Filter cards based on user role
   const filteredCards = (() => {
     switch (currentUser.role) {
       case "student":
-        return allCards.filter((card) => ["Attendance", "Users", "Support", "Help"].includes(card.title));
+        return allCards.filter((card) => ["Attendance", "Users", "Support", "FAQ"].includes(card.title));
       case "classRepresentative":
         return allCards.filter((card) =>
-          ["Attendance", "Users", "Download", "Support", "Help"].includes(card.title)
+          ["Attendance", "Users", "Download", "Support", "FAQ"].includes(card.title)
         );
       case "faculty":
         return allCards.filter((card) =>
-          ["Add Lecture", "Users", "Support", "Help", "Download"].includes(card.title)
+          ["Add Lecture", "Users", "Support", "FAQ", "Download"].includes(card.title)
         );
       case "admin":
         return allCards.filter((card) =>
-          ["Location", "Access Code", "Users", "Download", "Help", "Support Requests"].includes(card.title)
+          ["Location", "Access Code", "Users", "Download", "FAQ", "Support Requests"].includes(card.title)
         );
       default:
-        return allCards; // No cards for unknown roles
+        return []; // No cards for unknown roles
     }
   })();
 
@@ -118,32 +119,28 @@ const Home = () => {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={colors.primary}
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
       >
         {/* Profile Section */}
         <View style={{ backgroundColor: colors.card, padding: 16, paddingTop: 10 }}>
-                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-                   <Image
-                     source={imageUrl || require('@/assets/images/default.jpg')}
-                     style={{ width: 80, height: 80, borderRadius: 40,borderColor: colors.primary ,borderWidth: 3 }}
-                   />
-                   <View style={{ marginLeft: 16 }}>
-                     <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.text }}>
-                       {currentUser.firstName} {currentUser.lastName}
-                     </Text>
-                     <Text style={{ fontSize: 16, color: colors.text }}>{currentUser.email}</Text>
-                   </View>
-                 </View>
-                 <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 8, color: colors.text }}>
-                   Hi, {currentUser.firstName}
-                 </Text>
-                 <Text style={{ fontSize: 16, color: colors.text }}>Welcome to your class</Text>
-               </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+            <Image
+              source={imageUrl || require('@/assets/images/default.jpg')}
+              style={{ width: 80, height: 80, borderRadius: 40, borderColor: colors.primary, borderWidth: 3 }}
+            />
+            <View style={{ marginLeft: 16 }}>
+              <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.text }}>
+                {currentUser.firstName} {currentUser.lastName}
+              </Text>
+              <Text style={{ fontSize: 16, color: colors.text }}>{currentUser.email}</Text>
+            </View>
+          </View>
+          <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 8, color: colors.text }}>
+            Hi, {currentUser.firstName}
+          </Text>
+          <Text style={{ fontSize: 16, color: colors.text }}>Welcome to your class</Text>
+        </View>
 
         {/* Dashboard Section */}
         <View style={{ padding: 16 }}>
@@ -167,4 +164,3 @@ const Home = () => {
 };
 
 export default Home;
-

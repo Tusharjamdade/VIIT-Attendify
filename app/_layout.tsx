@@ -13,24 +13,23 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-
-  // Load custom fonts
-  const [fontsLoaded] = useFonts({
+  const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
-  const onLayoutRootView = useCallback(async () => {
-    if (fontsLoaded) {
-      await SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded]);
-
   useEffect(() => {
-    onLayoutRootView();
-  }, [onLayoutRootView]);
+    const hideSplash = async () => {
+      if (loaded) {
+        console.log('Fonts loaded. Hiding splash screen.');
+        await SplashScreen.hideAsync();
+      }
+    };
+    hideSplash();
+  }, [loaded]);
 
-  if (!fontsLoaded) {
-    return null; // Keep splash screen until fonts are loaded
+  if (!loaded) {
+    console.log('Fonts are still loading...');
+    return null; // Render nothing while fonts are loading
   }
 
   return (
@@ -44,6 +43,8 @@ export default function RootLayout() {
 
       {/* Navigation Stack */}
       <Stack initialRouteName="index" screenOptions={{ headerShown: true }}>
+        {/* Replace "index" with a non-conflicting name like "home" */}
+        <Stack.Screen name="index" options={{ title: 'Home', headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ title: 'Main', headerShown: false }} />
         <Stack.Screen name="(card)/users" options={{ title: 'Users', headerShown: true }} />
         <Stack.Screen name="(card)/attendance" options={{ title: 'Attendance', headerShown: true }} />
@@ -52,10 +53,10 @@ export default function RootLayout() {
         <Stack.Screen name="(card)/subjectattendance" options={{ title: 'Lecture', headerShown: true }} />
         <Stack.Screen name="(teacher)/downloadattendance" options={{ title: 'Download Attendance', headerShown: true }} />
         <Stack.Screen name="(admin)/setlocation" options={{ title: 'Class Location', headerShown: true }} />
-        <Stack.Screen name="(admin)/faq" options={{ title: 'FAQ', headerShown: true }} />
+        <Stack.Screen name="(card)/faq" options={{ title: 'FAQ', headerShown: true }} />
         <Stack.Screen name="(admin)/setaccesscode" options={{ title: 'Access Code', headerShown: true }} />
         <Stack.Screen name="(admin)/supportRequests" options={{ title: 'Support Requests', headerShown: true }} />
-        <Stack.Screen name="(auth)" options={{ title: 'Signin', headerShown: false }} />
+        <Stack.Screen name="signup" options={{ title: 'Sign Up', headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
     </ThemeProvider>

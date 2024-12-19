@@ -7,21 +7,18 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  useColorScheme,
+  StyleSheet,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { auth, firestore } from '../../src/firebase';
 import { doc, getDoc, collection, addDoc, query, where, getDocs } from 'firebase/firestore';
-import 'nativewind';
 import StudentProfile from '@/components/StudentProfile';
 import { DarkTheme, DefaultTheme, useTheme } from '@react-navigation/native';
 
-const subjects = ['Mathematics', 'Science', 'History', 'Literature', 'Physics', 'Chemistry', 'Biology'];
-
 export default function PostLecturePage() {
-  console.log("Postlecture")
-  const [subject, setSubject] = useState(subjects[0]);
+  const [subjects, setSubjects] = useState([]); // Initialize as empty array
+  const [subject, setSubject] = useState('');
   const [startTime, setStartTime] = useState(new Date());
   const [endTime, setEndTime] = useState(new Date());
   const [lectureDate, setLectureDate] = useState(new Date());
@@ -32,9 +29,85 @@ export default function PostLecturePage() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const { colors, dark } = useTheme(); // Fetching colors and theme status
+  const { colors, dark } = useTheme();
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: dark ? colors.background : colors.card,
+      paddingHorizontal: 20,
+    },
+    content: {
+      paddingVertical: 20,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: colors.text,
+      textAlign: 'center',
+      marginBottom: 30,  // Increased margin for more space
+    },
+    label: {
+      fontSize: 16,
+      color: colors.text,
+      marginBottom: 4,  // Increased margin for label separation
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      padding: 14,
+      color: colors.text,
+      backgroundColor: dark ? colors.card : colors.background,
+      marginBottom: 20,  // Increased margin between input fields
+    },
+    pickerContainer: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      marginBottom: 20,  // Increased margin for picker
+      backgroundColor: dark ? colors.card : colors.background,
+    },
+    picker: {
+      color: colors.text,
+    },
+    dateTimeButton: {
+      backgroundColor: dark ? colors.card : colors.background,
+      padding: 14,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+      marginBottom: 20,  // Increased margin for DateTime buttons
+    },
+    dateTimeButtonText: {
+      color: colors.text,
+    },
+    submitButton: {
+      backgroundColor: colors.primary,
+      padding: 15,
+      borderRadius: 8,
+      alignItems: 'center',
+      marginTop: 20, // Margin at top of submit button
+      borderRadius:14
+    },
+    submitButtonText: {
+      color: '#FFFFFF',
+      fontSize: 18,
+      fontWeight: 'bold',
+    },
+  });
   
+  const getSubjects = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(firestore, 'addSubject'));
+      const subjectsList = querySnapshot.docs.map((doc) => doc.data().name);
+      setSubjects(subjectsList); // Update state with fetched subjects
+    } catch (error) {
+      console.error('Error fetching subjects:', error);
+      Alert.alert('Error', 'Failed to fetch subjects');
+    }
+  };
+
   const fetchCurrentUserDetails = async () => {
     try {
       const user = auth.currentUser;
@@ -52,13 +125,14 @@ export default function PostLecturePage() {
       console.error('Error fetching user details:', error);
       Alert.alert('Error', 'Failed to fetch user details');
     } finally {
-      setLoading(false);
+      setLoading(false); // Ensure loading state is set to false after user details are fetched
     }
   };
 
   useEffect(() => {
-    fetchCurrentUserDetails();
-  }, []);
+    getSubjects(); // Fetch subjects on mount
+    fetchCurrentUserDetails(); // Fetch current user details
+  }, []); // Empty dependency array ensures this effect runs only once after the initial render
 
   const formatTime = (date) => {
     return date.toLocaleTimeString('en-US', {
@@ -121,11 +195,8 @@ export default function PostLecturePage() {
           location,
           teacherName,
         });
-        const q = query(
-          collection(firestore, 'users'),
-          where('role', '==', 'student')
-        );
 
+        const q = query(collection(firestore, 'users'), where('role', '==', 'student'));
         const usersSnapshot = await getDocs(q);
         const students = usersSnapshot.docs.map((doc) => {
           const { uid, rollNo, firstName, lastName } = doc.data();
@@ -158,7 +229,7 @@ export default function PostLecturePage() {
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center">
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
@@ -166,44 +237,42 @@ export default function PostLecturePage() {
 
   if (!currentUser) {
     return (
-      <View className="flex-1 justify-center items-center">
-        <Text className="text-lg text-red-500">Failed to load user details</Text>
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text style={{ fontSize: 18, color: colors.text }}>Failed to load user details</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView className={`flex-1 ${dark ? 'bg-black' : 'bg-white'}`}>
+    <ScrollView style={styles.container}>
       <StudentProfile />
-      <View className='p-5'>
+      <View style={styles.content}>
+        <Text style={styles.title}>Post Lecture Details</Text>
 
-      <Text className={`text-2xl font-bold text-center mb-4 ${dark ? 'text-blue-400' : 'text-blue-800'}`}>
-        Post Lecture Details
-      </Text>
-
-      <View className="mb-4">
-        <Text className={`text-lg ${dark ? 'text-blue-400' : 'text-blue-800'}`}>Subject</Text>
-        <View className={`border rounded-md ${dark ? 'border-blue-400' : 'border-blue-800'}`}>
+        <Text style={styles.label}>Subject</Text>
+        <View style={styles.pickerContainer}>
           <Picker
             selectedValue={subject}
             onValueChange={(itemValue) => setSubject(itemValue)}
-            style={{ color: dark ? '#FFFFFF' : '#000000' }}
+            style={styles.picker}
           >
             {subjects.map((sub, index) => (
-              <Picker.Item key={index} label={sub} value={sub} />
+              <Picker.Item
+                key={index}
+                label={sub}
+                value={sub}
+                color={dark ? 'black' : '#1C1C1C'}
+              />
             ))}
           </Picker>
         </View>
-      </View>
 
-      <View className="mb-4">
-        <Text className={`text-lg ${dark ? 'text-blue-400' : 'text-blue-800'}`}>Start Time</Text>
+        <Text style={styles.label}>Start Time</Text>
         <TouchableOpacity
           onPress={() => setShowStartPicker(true)}
-          className="p-3 rounded-md"
-          style={{ backgroundColor: dark ? '#333333' : '#E0E0E0' }}
+          style={styles.dateTimeButton}
         >
-          <Text style={{ color: dark ? '#00BFFF' : '#003366' }}>{formatTime(startTime)}</Text>
+          <Text style={styles.dateTimeButtonText}>{formatTime(startTime)}</Text>
         </TouchableOpacity>
         {showStartPicker && (
           <DateTimePicker
@@ -214,16 +283,13 @@ export default function PostLecturePage() {
             onChange={onChangeStartTime}
           />
         )}
-      </View>
 
-      <View className="mb-4">
-        <Text className={`text-lg ${dark ? 'text-blue-400' : 'text-blue-800'}`}>End Time</Text>
+        <Text style={styles.label}>End Time</Text>
         <TouchableOpacity
           onPress={() => setShowEndPicker(true)}
-          className="p-3 rounded-md"
-          style={{ backgroundColor: dark ? '#333333' : '#E0E0E0' }}
+          style={styles.dateTimeButton}
         >
-          <Text style={{ color: dark ? '#00BFFF' : '#003366' }}>{formatTime(endTime)}</Text>
+          <Text style={styles.dateTimeButtonText}>{formatTime(endTime)}</Text>
         </TouchableOpacity>
         {showEndPicker && (
           <DateTimePicker
@@ -234,16 +300,13 @@ export default function PostLecturePage() {
             onChange={onChangeEndTime}
           />
         )}
-      </View>
 
-      <View className="mb-4">
-        <Text className={`text-lg ${dark ? 'text-blue-400' : 'text-blue-800'}`}>Lecture Date</Text>
+        <Text style={styles.label}>Lecture Date</Text>
         <TouchableOpacity
           onPress={() => setShowDatePicker(true)}
-          className="p-3 rounded-md"
-          style={{ backgroundColor: dark ? '#333333' : '#E0E0E0' }}
+          style={styles.dateTimeButton}
         >
-          <Text style={{ color: dark ? '#00BFFF' : '#003366' }}>{lectureDate.toDateString()}</Text>
+          <Text style={styles.dateTimeButtonText}>{lectureDate.toDateString()}</Text>
         </TouchableOpacity>
         {showDatePicker && (
           <DateTimePicker
@@ -253,45 +316,29 @@ export default function PostLecturePage() {
             onChange={onChangeDate}
           />
         )}
-      </View>
 
-      <View className="mb-4">
-        <Text className={`text-lg ${dark ? 'text-blue-400' : 'text-blue-800'}`}>Location</Text>
+        <Text style={styles.label}>Location</Text>
         <TextInput
-          className="border rounded-md p-3"
-          style={{
-            color: dark ? '#FFFFFF' : '#000000',
-            backgroundColor: dark ? '#333333' : '#FFFFFF',
-            borderColor: dark ? '#00BFFF' : '#003366',
-          }}
+          style={styles.input}
           onChangeText={setLocation}
           value={location}
           placeholder="Enter lecture location"
-          placeholderTextColor={dark ? '#BBBBBB' : '#A0AEC0'}
+          placeholderTextColor={colors.text + '80'}
         />
-      </View>
 
-      <View className="mb-4">
-        <Text className={`text-lg ${dark ? 'text-blue-400' : 'text-blue-800'}`}>Teacher Name</Text>
+        <Text style={styles.label}>Teacher Name</Text>
         <TextInput
-          className="border rounded-md p-3 bg-gray-100"
-          style={{
-            color: dark ? '#FFFFFF' : '#000000',
-            backgroundColor: dark ? '#333333' : '#E0E0E0',
-            borderColor: dark ? '#00BFFF' : '#003366',
-          }}
+          style={[styles.input, { backgroundColor: dark ? colors.border : colors.background }]}
           editable={false}
           value={teacherName}
         />
-      </View>
 
-      <TouchableOpacity
-        onPress={handleSubmit}
-        className="bg-blue-500 p-4 rounded-md"
-        style={{ backgroundColor: dark ? '#1D4ED8' : '#3182CE' }}
-      >
-        <Text style={{ color: '#FFFFFF', textAlign: 'center' }}>Submit Lecture</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          onPress={handleSubmit}
+          style={styles.submitButton}
+        >
+          <Text style={styles.submitButtonText}>Submit Lecture</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );

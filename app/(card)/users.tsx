@@ -37,10 +37,7 @@ const UserCard: React.FC<UserCardProps> = ({ user, isDarkMode }) => {
   const userImage = user.image && imageMap[user.image] ? imageMap[user.image] : defaultPhoto;
 
   return (
-    <View style={[
-      styles.card,
-      isDarkMode ? styles.cardDark : styles.cardLight
-    ]}>
+    <View style={[styles.card, isDarkMode ? styles.cardDark : styles.cardLight]}>
       <Image source={userImage} style={styles.photo} />
       <View style={styles.info}>
         <Text style={[styles.name, isDarkMode ? styles.textDark : styles.textLight]}>
@@ -58,7 +55,6 @@ const UserCard: React.FC<UserCardProps> = ({ user, isDarkMode }) => {
 };
 
 const UsersPage: React.FC = () => {
-  console.log("User")
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const isDarkMode = useColorScheme() === 'dark';
@@ -84,7 +80,7 @@ const UsersPage: React.FC = () => {
     };
 
     fetchUsers();
-  }, []);
+  }, []); // Empty dependency array ensures this runs once
 
   if (loading) {
     return (

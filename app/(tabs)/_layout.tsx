@@ -22,7 +22,6 @@ const TabIcon = ({ icon, color, name, focused }: TabbarProps) => (
   </View>
 );
 
-
 const PreventBackNavigation = () => {
   useFocusEffect(
     React.useCallback(() => {
@@ -103,4 +102,3 @@ const HomePagelayout = () => {
 };
 
 export default HomePagelayout;
-

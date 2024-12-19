@@ -27,6 +27,8 @@ export default function SubjectAttendance() {
     try {
       // Perform any necessary data fetching or state updates here
       console.log('Refreshing data...');
+      // Example fetch - make sure to update this to fetch the actual students
+      // You can replace the data with the actual data fetching logic here
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -39,11 +41,9 @@ export default function SubjectAttendance() {
     await fetchData();
     setRefreshing(false);
   }, [fetchData]);
-  console.log("Subject attendance")
 
   const renderHeader = () => (
     <View>
-      <StudentProfile />
       <SubjectCard
         subjectId={details.id}
         subjectName={details.subject || 'Unknown Subject'}
@@ -58,12 +58,13 @@ export default function SubjectAttendance() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StudentProfile />
       <FlatList
-        data={[]} // Empty data as FlatList requires a `data` prop
-        renderItem={null} // No item to render in this list
-        keyExtractor={() => 'header'} // Dummy key
+        data={[]} // You will need to replace this with the actual student data
+        renderItem={null} // Placeholder for now, use your actual render logic
+        keyExtractor={() => 'header'} // Dummy key for the header
         ListHeaderComponent={renderHeader} // Renders the header with other components
-        ListFooterComponent={<StudentList lecture={details} />} // Refreshes this component as well
+        ListFooterComponent={<StudentList lecture={details} />} // StudentList is passed here to render footer content
         contentContainerStyle={styles.scrollContent}
         nestedScrollEnabled
         refreshControl={
